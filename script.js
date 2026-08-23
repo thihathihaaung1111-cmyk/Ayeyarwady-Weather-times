@@ -34,70 +34,12 @@ function findNearestLocation(userLat, userLon, locations) {
             shortestDistance = distance;
             nearest = place;
         }
-    }).
-        return nearest;
-}
-locationBtn.addEventListener("click", async () => {
-
-    if (!navigator.geolocation) {
-        alert("သင့် Browser က Geolocation ကို မထောက်ပံ့ပါ။");
-        return;
     }
 
-    document.getElementById("location").innerHTML = "📍 တည်နေရာကို ရှာဖွေနေသည်...";
+    return nearest;
+}
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-
-        const userLat = position.coords.latitude;
-        const userLon = position.coords.longitude;
-
-        try {
-
-            // locations.json ကိုဖတ်
-            const response = await fetch("locations.json");
-            const locations = await response.json();
-
-            // အနီးဆုံးနေရာရှာ
-            const nearest = findNearestLocation(userLat, userLon, locations);
-
-            // နေရာပြ
-            document.getElementById("location").innerHTML =
-                `📍 ${nearest.village_mm}<br>${nearest.township_mm}`;
-
-            // Weather API
-            const weatherUrl =
-                `https://api.open-meteo.com/v1/forecast?latitude=${nearest.latitude}&longitude=${nearest.longitude}&current=temperature_2m,weather_code&hourly=precipitation_probability`;
-
-            const weatherResponse = await fetch(weatherUrl);
-            const data = await weatherResponse.json();
-
-            document.getElementById("temperature").innerHTML =
-                `🌡️ ${data.current.temperature_2m} °C`;
-
-            document.getElementById("weatherText").innerHTML =
-                `☁️ Weather Code : ${data.current.weather_code}`;
-
-            const rainChance =
-                data.hourly.precipitation_probability[0];
-
-            document.getElementById("rainChance").innerHTML =
-                `🌧️ ${rainChance}%`;
-
-        } catch (err) {
-            console.error(err);
-            alert("Data ရယူရာတွင် အမှားဖြစ်နေပါသည်။");
-        }
-
-    }, () => {
-
-        document.getElementById("location").innerHTML =
-            "❌ Location Permission ပေးပါ။";
-
-    });
-
-});
 function getWeatherText(code) {
-
     const weather = {
         0: "☀️ နေသာ",
         1: "🌤️ တိမ်အနည်းငယ်",
@@ -114,11 +56,67 @@ function getWeatherText(code) {
         80: "🌦️ မိုးတစ်ခါတစ်ရံ",
         81: "🌧️ မိုးများ",
         82: "⛈️ မိုးပြင်း",
-        95: "⛈️ မိုးကြိုးမုန်တိုင်း",
-        96: "⛈️ မိုးကြိုးနှင့် မိုးသီး",
-        99: "⛈️ မိုးကြိုးပြင်း"
+        95: "⛈️ မိုးကြိုးမုန်တိုင်း"
     };
 
-    return weather[code] || "❓ မသိသောရာသီဥတု";
-        }
+    return weather[code] || "မသိသော ရာသီဥတု";
 }
+
+locationBtn.addEventListener("click", async () => {
+
+    if (!navigator.geolocation) {
+        alert("Geolocation ကို Browser က မထောက်ပံ့ပါ။");
+        return;
+    }
+
+    document.getElementById("location").innerHTML =
+        "📍 တည်နေရာကို ရှာနေသည်...";
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        try {
+
+            const response = await fetch("locations.json");
+            const locations = await response.json();
+
+            const nearest = findNearestLocation(userLat, userLon, locations);
+
+            document.getElementById("location").innerHTML =
+                `📍 ${nearest.village_mm} (${nearest.township_mm})`;
+
+            const weatherUrl =
+                `https://api.open-meteo.com/v1/forecast?latitude=${nearest.latitude}&longitude=${nearest.longitude}&current=temperature_2m,weather_code&hourly=precipitation_probability`;
+
+            const weatherResponse = await fetch(weatherUrl);
+            const data = await weatherResponse.json();
+
+            document.getElementById("temperature").innerHTML =
+                `🌡️ Temperature : ${data.current.temperature_2m} °C`;
+
+            document.getElementById("weatherText").innerHTML =
+                `☁️ ${getWeatherText(data.current.weather_code)}`;
+
+            const rain =
+                data.hourly.precipitation_probability[0] ?? 0;
+
+            document.getElementById("rainChance").innerHTML =
+                `🌧️ Rain Chance : ${rain}%`;
+
+        } catch (error) {
+            console.error(error);
+
+            document.getElementById("location").innerHTML =
+                "❌ အချက်အလက် ရယူ၍ မရပါ";
+        }
+
+    }, () => {
+
+        document.getElementById("location").innerHTML =
+            "❌ Location Permission ပေးပါ";
+
+    });
+
+});
