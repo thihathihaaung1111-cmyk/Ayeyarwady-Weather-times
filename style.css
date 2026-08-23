@@ -71,3 +71,27 @@ button {
 .daily-row:last-child {
   border-bottom: none;
 }
+.tide-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #eef7ff;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 5px solid #0077cc;
+}
+
+.tide-box {
+  text-align: center;
+}
+
+.tide-box span {
+  font-size: 12px;
+  color: #666;
+  display: block;
+}
+
+.tide-box b {
+  font-size: 18px;
+  color: #0077cc;
+}
