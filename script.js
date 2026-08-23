@@ -1,50 +1,5 @@
 const locationBtn = document.getElementById("locationBtn");
 
-locationBtn.addEventListener("click", () => {
-    // Geolocation မရှိပါက သတိပေးရန်
-    if (!navigator.geolocation) {
-        alert("သင့် Browser က Geolocation ကို အထောက်အပံ့ မပေးပါ၊၊");
-        return;
-    }
-
-    document.getElementById("location").innerText = "📍 တည်နေရာကို ရှာဖွေနေသည်...";
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        document.getElementById("location").innerHTML = 
-            `📍 Latitude: ${lat.toFixed(4)} <br> Longitude: ${lon.toFixed(4)}`;
-
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&hourly=precipitation_probability`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            // Weather Data များကို HTML သို့ ထည့်သွင်းခြင်း
-            document.getElementById("temperature").innerHTML = 
-                `🌡️ Temperature : ${data.current.temperature_2m} °C`;
-
-            document.getElementById("weatherText").innerHTML = 
-                `☁️ Weather Code : ${data.current.weather_code}`;
-
-            // Rain Chance ရရှိပါက ပြရန်
-            const rainChance = data.hourly?.precipitation_probability?.[0] ?? 0;
-            document.getElementById("rainChance").innerHTML = 
-                `🌧️ Rain Chance : ${rainChance} %`;
-
-        } catch (error) {
-            console.error(error);
-            alert("ရာသီဥတု အချက်အလက်များ ယူဆောင်ရာတွင် အမှားအယွင်း ရှိနေပါသည်။");
-        }
-    }, (error) => {
-        // Location Permission ပိတ်ထားလျှင် ပြရန်
-        document.getElementById("location").innerText = "❌ တည်နေရာ ရယူ၍ မရပါ။ Permission ပေးပါ။";
-    });
-});
-
-
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
 
@@ -79,7 +34,90 @@ function findNearestLocation(userLat, userLon, locations) {
             shortestDistance = distance;
             nearest = place;
         }
+    }).
+        return nearest;
+}
+locationBtn.addEventListener("click", async () => {
+
+    if (!navigator.geolocation) {
+        alert("သင့် Browser က Geolocation ကို မထောက်ပံ့ပါ။");
+        return;
     }
 
-    return nearest;
-}
+    document.getElementById("location").innerHTML = "📍 တည်နေရာကို ရှာဖွေနေသည်...";
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        try {
+
+            // locations.json ကိုဖတ်
+            const response = await fetch("locations.json");
+            const locations = await response.json();
+
+            // အနီးဆုံးနေရာရှာ
+            const nearest = findNearestLocation(userLat, userLon, locations);
+
+            // နေရာပြ
+            document.getElementById("location").innerHTML =
+                `📍 ${nearest.village_mm}<br>${nearest.township_mm}`;
+
+            // Weather API
+            const weatherUrl =
+                `https://api.open-meteo.com/v1/forecast?latitude=${nearest.latitude}&longitude=${nearest.longitude}&current=temperature_2m,weather_code&hourly=precipitation_probability`;
+
+            const weatherResponse = await fetch(weatherUrl);
+            const data = await weatherResponse.json();
+
+            document.getElementById("temperature").innerHTML =
+                `🌡️ ${data.current.temperature_2m} °C`;
+
+            document.getElementById("weatherText").innerHTML =
+                `☁️ Weather Code : ${data.current.weather_code}`;
+
+            const rainChance =
+                data.hourly.precipitation_probability[0];
+
+            document.getElementById("rainChance").innerHTML =
+                `🌧️ ${rainChance}%`;
+
+        } catch (err) {
+            console.error(err);
+            alert("Data ရယူရာတွင် အမှားဖြစ်နေပါသည်။");
+        }
+
+    }, () => {
+
+        document.getElementById("location").innerHTML =
+            "❌ Location Permission ပေးပါ။";
+
+    });
+
+});
+function getWeatherText(code) {
+
+    const weather = {
+        0: "☀️ နေသာ",
+        1: "🌤️ တိမ်အနည်းငယ်",
+        2: "⛅ တိမ်အသင့်အတင့်",
+        3: "☁️ တိမ်ထူ",
+        45: "🌫️ မြူ",
+        48: "🌫️ မြူထူ",
+        51: "🌦️ မိုးဖွဲ",
+        53: "🌦️ မိုးဖွဲအသင့်အတင့်",
+        55: "🌧️ မိုးဖွဲများ",
+        61: "🌧️ မိုးရွာ",
+        63: "🌧️ မိုးရွာအသင့်အတင့်",
+        65: "🌧️ မိုးသည်း",
+        80: "🌦️ မိုးတစ်ခါတစ်ရံ",
+        81: "🌧️ မိုးများ",
+        82: "⛈️ မိုးပြင်း",
+        95: "⛈️ မိုးကြိုးမုန်တိုင်း",
+        96: "⛈️ မိုးကြိုးနှင့် မိုးသီး",
+        99: "⛈️ မိုးကြိုးပြင်း"
+    };
+
+    return weather[code] || "❓ မသိသောရာသီဥတု";
+        }
