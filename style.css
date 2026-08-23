@@ -34,3 +34,40 @@ button {
   border-radius: 10px;
   font-size: 16px;
 }
+
+.forecast-section {
+  margin-top: 20px;
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 24 Hours Horizontal Scroll */
+.scroll-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.hourly-card {
+  min-width: 70px;
+  text-align: center;
+  padding: 10px;
+  background: #f0f4f8;
+  border-radius: 8px;
+}
+
+/* 7 Days List */
+.daily-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.daily-row:last-child {
+  border-bottom: none;
+}
