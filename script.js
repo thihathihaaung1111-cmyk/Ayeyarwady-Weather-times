@@ -81,7 +81,6 @@ function renderHourlyForecast(hourly) {
         `;
     }
 }
-
 // ၇ ရက်စာ ပြသပေးမည့် Function
 function renderDailyForecast(daily) {
     const container = document.getElementById('daily-forecast');
@@ -138,6 +137,53 @@ locationBtn.addEventListener("click", async () => {
             document.getElementById("weatherText").innerHTML = 
                 `☁️ ${getWeatherText(data.current.weather_code)}`;
 
+            // မြန်ဆန်ပြီး Error မတက်အောင် ပြင်ဆင်ထားသော ဒီရေ Function
+async function fetchTideData(lat, lon) {
+    const tideContainer = document.getElementById("tide-info");
+    if (!tideContainer) return;
+
+    try {
+        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height&timezone=Asia%2FYangon`;
+        const response = await fetch(marineUrl);
+        const data = await response.json();
+
+        // Data ရှိရင် အမှန်ယူမည်၊ မရှိရင် သာမန် ခန့်မှန်းချက် ပြမည်
+        if (data && data.current && data.current.wave_height !== undefined) {
+            const currentWave = data.current.wave_height;
+            let tideStatus = "ပုံမှန် ရေအတက်/အကျ";
+            if (currentWave > 1.5) {
+                tideStatus = "⚠️ ဒီရေ/လှိုင်း ကြီးနိုင်သည်";
+            }
+
+            tideContainer.innerHTML = `
+                <div class="tide-box">
+                    <span>လက်ရှိ ရေမျက်နှာပြင် အမြင့်</span>
+                    <b>~ ${currentWave} မီတာ</b>
+                </div>
+                <div class="tide-box">
+                    <span>အခြေအနေ</span>
+                    <b>${tideStatus}</b>
+                </div>
+            `;
+        } else {
+            throw new Error("No marine data for inland area");
+        }
+    } catch (error) {
+        // ပင်လယ်နှင့် ဝေးသော ကုန်းတွင်းပိုင်း မြို့များအတွက် ချက်ချင်း ပေါ်လာမည့် စာသား
+        tideContainer.innerHTML = `
+            <div class="tide-box">
+                <span>မြစ်ရေ/ဒီရေ အခြေအနေ</span>
+                <b>ပုံမှန် ရေကြောင်း သွားလာနိုင်သည်</b>
+            </div>
+            <div class="tide-box">
+                <span>မှတ်ချက်</span>
+                <b>ကုန်းတွင်းပိုင်း ဒေသဖြစ်သည်</b>
+            </div>
+        `;
+    }
+}
+
+
             const rain = data.hourly.precipitation_probability[0] ?? 0;
             document.getElementById("rainChance").innerHTML = 
                 `🌧 Rain Chance : ${rain}%`;
@@ -146,55 +192,4 @@ locationBtn.addEventListener("click", async () => {
             renderHourlyForecast(data.hourly);
             renderDailyForecst(data.daily);
 
-            // ဒီရေ အချက်အလက် ပြသပေးမည့် Function
-async function fetchTideData(lat, lon) {
-  const tideContainer = document.getElementById("tide-info");
-  if (!tideContainer) return;
-
-  // Open-Meteo Marine API မှ ပင်လယ်ရေမျက်နှာပြင် အမြင့် (Wave/Tide) ဒေတာ ရယူခြင်း
-  const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height&hourly=wave_height&timezone=Asia%2FYangon`;
-
-  try {
-    const response = await fetch(marineUrl);
-    const data = await response.json();
-
-    const currentWave = data.current?.wave_height ?? 0.5;
-    
-    // ရေအမြင့်အပေါ် မူတည်၍ ဒီရေအခြေအနေ ခန့်မှန်းခြင်း
-    let tideStatus = "ပုံမှန် ရေအတက်/အကျ";
-    if (currentWave > 1.5) {
-      tideStatus = "⚠️ ဒီရေ/လှိုင်း ကြီးနိုင်သည်";
-    } else if (currentWave < 0.3) {
-      tideStatus = "ဒီရေ သာမန်အတိုင်းရှိမည်";
-    }
-
-    tideContainer.innerHTML = `
-      <div class="tide-box">
-        <span>လက်ရှိ ရေမျက်နှာပြင် အမြင့်</span>
-        <b>~ ${currentWave} မီတာ</b>
-      </div>
-      <div class="tide-box">
-        <span>အခြေအနေ</span>
-        <b>${tideStatus}</b>
-      </div>
-    `;
-  } catch (error) {
-    // ပင်လယ်နှင့် ဝေးသော မြို့များအတွက် ဧရာဝတီမြစ်ရေအခြေအနေအဖြစ် ပြသပေးခြင်း
-    tideContainer.innerHTML = `
-      <div class="tide-box">
-        <span>မြစ်ရေ/ဒီရေ အခြေအနေ</span>
-        <b>ပုံမှန် စိုက်ပျိုး/ရေကြောင်း သွားလာနိုင်သည်</b>
-      </div>
-    `;
-  }
-}
-
-
-        } catch (error) {
-            console.error(error);
-            document.getElementById("location").innerHTML = "❌ အချက်အလက် ရယူ၍ မရပါ";
-        }
-    }, () => {
-        document.getElementById("location").innerHTML = "❌ Location Permission ပေးပါ";
-    });
-});
+            
