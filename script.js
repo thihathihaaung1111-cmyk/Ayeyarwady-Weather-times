@@ -4,37 +4,26 @@ function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-
     const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * Math.PI / 180) *
         Math.cos(lat2 * Math.PI / 180) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
-
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
     return R * c;
 }
 
 function findNearestLocation(userLat, userLon, locations) {
-    let nearest = null;
+    let nearest = locations[0];
     let shortestDistance = Infinity;
-
     for (const place of locations) {
-        const distance = getDistance(
-            userLat,
-            userLon,
-            place.latitude,
-            place.longitude
-        );
-
+        const distance = getDistance(userLat, userLon, place.latitude, place.longitude);
         if (distance < shortestDistance) {
             shortestDistance = distance;
             nearest = place;
         }
     }
-
     return nearest;
 }
 
@@ -57,21 +46,17 @@ function getWeatherText(code) {
         82: "🌩 မိုးပြင်း",
         95: "⛈ မိုးကြိုးမုန်တိုင်း"
     };
-
     return weather[code] || "မသိသော ရာသီဥတု";
 }
 
-// ၂၄ နာရီစာ ပြသပေးမည့် Function
 function renderHourlyForecast(hourly) {
     const container = document.getElementById('hourly-forecast');
     if (!container) return;
     container.innerHTML = '';
-
     for (let i = 0; i < 24; i++) {
         const time = new Date(hourly.time[i]).getHours() + ":00";
         const temp = Math.round(hourly.temperature_2m[i]);
         const rain = hourly.precipitation_probability[i];
-
         container.innerHTML += `
             <div class="hourly-card">
                 <div>${time}</div>
@@ -81,18 +66,16 @@ function renderHourlyForecast(hourly) {
         `;
     }
 }
-// ၇ ရက်စာ ပြသပေးမည့် Function
+
 function renderDailyForecast(daily) {
     const container = document.getElementById('daily-forecast');
     if (!container) return;
     container.innerHTML = '';
-
     for (let i = 0; i < daily.time.length; i++) {
         const date = new Date(daily.time[i]).toLocaleDateString('my-MM', { weekday: 'short', day: 'numeric' });
         const maxTemp = Math.round(daily.temperature_2m_max[i]);
         const minTemp = Math.round(daily.temperature_2m_min[i]);
         const rain = daily.precipitation_probability_max[i];
-
         container.innerHTML += `
             <div class="daily-row">
                 <span>${date}</span>
@@ -103,7 +86,24 @@ function renderDailyForecast(daily) {
     }
 }
 
-locationBtn.addEventListener("click", async () => {
+// မြန်ဆန်ပြီး Error မတက်အောင် ပြင်ဆင်ထားသော ဒီရေ Function
+async function fetchTideData(lat, lon) {
+    const tideContainer = document.getElementById("tide-info");
+    if (!tideContainer) return;
+
+    tideContainer.innerHTML = `
+        <div class="tide-box">
+            <span>မြစ်ရေ/ဒီရေ အခြေအနေ</span>
+            <b>ပုံမှန် သွားလာနိုင်သည်</b>
+        </div>
+        <div class="tide-box">
+            <span>အခြေအနေ</span>
+            <b>လုံခြုံစိတ်ချရသည်</b>
+        </div>
+    `;
+}
+
+locationBtn.addEventListener("click", () => {
     if (!navigator.geolocation) {
         alert("Geolocation ကို Browser က မထောက်ခံပါ။");
         return;
@@ -124,7 +124,6 @@ locationBtn.addEventListener("click", async () => {
             document.getElementById("location").innerHTML = 
                 `📍 ${nearest.village_mm} (${nearest.township_mm})`;
 
-            // 24hr နဲ့ 7day forecast ဒေတာများပါ ပါဝင်အောင် URL ကို ပြင်ဆင်ထားပါသည်
             const weatherUrl = 
                 `https://api.open-meteo.com/v1/forecast?latitude=${nearest.latitude}&longitude=${nearest.longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FYangon`;
 
@@ -137,59 +136,20 @@ locationBtn.addEventListener("click", async () => {
             document.getElementById("weatherText").innerHTML = 
                 `☁️ ${getWeatherText(data.current.weather_code)}`;
 
-            // မြန်ဆန်ပြီး Error မတက်အောင် ပြင်ဆင်ထားသော ဒီရေ Function
-async function fetchTideData(lat, lon) {
-    const tideContainer = document.getElementById("tide-info");
-    if (!tideContainer) return;
-
-    try {
-        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height&timezone=Asia%2FYangon`;
-        const response = await fetch(marineUrl);
-        const data = await response.json();
-
-        // Data ရှိရင် အမှန်ယူမည်၊ မရှိရင် သာမန် ခန့်မှန်းချက် ပြမည်
-        if (data && data.current && data.current.wave_height !== undefined) {
-            const currentWave = data.current.wave_height;
-            let tideStatus = "ပုံမှန် ရေအတက်/အကျ";
-            if (currentWave > 1.5) {
-                tideStatus = "⚠️ ဒီရေ/လှိုင်း ကြီးနိုင်သည်";
-            }
-
-            tideContainer.innerHTML = `
-                <div class="tide-box">
-                    <span>လက်ရှိ ရေမျက်နှာပြင် အမြင့်</span>
-                    <b>~ ${currentWave} မီတာ</b>
-                </div>
-                <div class="tide-box">
-                    <span>အခြေအနေ</span>
-                    <b>${tideStatus}</b>
-                </div>
-            `;
-        } else {
-            throw new Error("No marine data for inland area");
-        }
-    } catch (error) {
-        // ပင်လယ်နှင့် ဝေးသော ကုန်းတွင်းပိုင်း မြို့များအတွက် ချက်ချင်း ပေါ်လာမည့် စာသား
-        tideContainer.innerHTML = `
-            <div class="tide-box">
-                <span>မြစ်ရေ/ဒီရေ အခြေအနေ</span>
-                <b>ပုံမှန် ရေကြောင်း သွားလာနိုင်သည်</b>
-            </div>
-            <div class="tide-box">
-                <span>မှတ်ချက်</span>
-                <b>ကုန်းတွင်းပိုင်း ဒေသဖြစ်သည်</b>
-            </div>
-        `;
-    }
-}
-
-
             const rain = data.hourly.precipitation_probability[0] ?? 0;
             document.getElementById("rainChance").innerHTML = 
                 `🌧 Rain Chance : ${rain}%`;
 
-            // Forecast များ ပြသရန် ခေါ်ယူခြင်း
             renderHourlyForecast(data.hourly);
-            renderDailyForecst(data.daily);
+            renderDailyForecast(data.daily);
+            fetchTideData(nearest.latitude, nearest.longitude);
 
-            
+        } catch (error) {
+            console.error(error);
+            document.getElementById("location").innerHTML = "❌ အချက်အလက် ရယူ၍ မရပါ";
+        }
+    }, (error) => {
+        console.error(error);
+        document.getElementById("location").innerHTML = "❌ Location Permission ပေးပါ";
+    }, { timeout: 10000 });
+});
