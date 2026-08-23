@@ -121,3 +121,4 @@ function getWeatherText(code) {
 
     return weather[code] || "❓ မသိသောရာသီဥတု";
         }
+}
