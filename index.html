@@ -10,17 +10,25 @@
 
     <div class="app-container">
         <!-- Header Section -->
-                <!-- Header Section -->
         <header class="header">
             <div class="logo-area">
                 <h1>ဧရာဝတီ Weather & River Alerts</h1>
                 <span class="badge-status" id="locationStatus">စောင့်ဆိုင်းနေသည်...</span>
             </div>
             <div class="header-btns" style="display: flex; gap: 6px;">
-                <button class="btn-reset" onclick="resetLocation()" title="တည်နေရာအသစ်ရှာရန်" style="background: #0d9488; border: none; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">📍 ပြောင်းရန်</button>
+                <button class="btn-reset" onclick="resetLocation()" title="GPS ဖြင့် ပြန်ရှာရန်" style="background: #0d9488; border: none; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">📍 GPS</button>
                 <button class="btn-premium" id="premiumBtn">⭐ Premium</button>
             </div>
         </header>
+
+        <!-- Search Bar Section (မြို့နယ်/ရွာ အမည်ဖြင့် ရှာရန်) -->
+        <section class="search-section" style="padding: 10px 16px; background: rgba(255, 255, 255, 0.05); margin-bottom: 10px; border-radius: 8px;">
+            <div style="display: flex; gap: 8px; position: relative;">
+                <input type="text" id="locationSearchInput" placeholder="🔍 မြို့နယ် သို့မဟုတ် ရွာနာမည် ရိုက်ထည့်ပါ..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 0.9rem;" oninput="filterLocations(this.value)">
+            </div>
+            <!-- Search Results Dropdown List -->
+            <ul id="searchResultsList" style="list-style: none; padding: 0; margin: 5px 0 0 0; max-height: 150px; overflow-y: auto; background: #1e293b; border-radius: 6px; display: none; position: absolute; width: 100%; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></ul>
+        </section>
 
         <!-- Dynamic Location Info -->
         <section class="current-location-card">
@@ -28,11 +36,11 @@
             <p id="geoCoordinates" class="sub-text">Lat: -- | Long: --</p>
         </section>
 
-        <!-- Toggle Tabs / Buttons (အသုံးပြုသူ ကြည့်ချင်တာပဲ ရွေးကြည့်ရန်) -->
+        <!-- Toggle Tabs / Buttons -->
         <nav class="tab-navigation">
-            <button class="tab-btn active" data-target="overview">အထွေထွေ</button>
+            <button class="tab-btn active" data-target="overview">အကျဉ်းချုပ်</button>
             <button class="tab-btn" data-target="tides">ဒီရေ/ရေမှတ်</button>
-            <button class="tab-btn" data-target="environment">လေထု/UV/လေတိုက်နှုန်း</button>
+            <button class="tab-btn" data-target="environment">လေတိုက်/UV/လေထု</button>
             <button class="tab-btn" data-target="ai-insights">AI ခန့်မှန်းချက်</button>
         </nav>
 
@@ -40,74 +48,71 @@
         <main class="tab-content active" id="overview">
             <div class="card-grid">
                 <div class="card">
-                    <h3>အပူချိန်</h3>
-                    <div class="card-value" id="tempValue">-- °C</div>
+                    <h3>🌡️ လက်ရှိ အပူချိန်</h3>
+                    <p class="value" id="tempValue">-- °C</p>
                 </div>
                 <div class="card">
-                    <h3>မိုးရေချိန်</h3>
-                    <div class="card-value" id="rainValue">-- mm</div>
+                    <h3>🌧️ မိုးရေချိန် (ယနေ့)</h3>
+                    <p class="value" id="rainValue">-- mm</p>
                 </div>
-                <div class="card alert-card">
-                    <h3>ရေကြီးနိုင်ချေ သတိပေးချက်</h3>
-                    <div class="card-value alert-text" id="floodAlert">စစ်ဆေးနေသည်...</div>
-                </div>
+            </div>
+            <div class="card alert-card">
+                <h3>⚠️ ရေကြီး/ရေလျှံ သတိပေးချက်</h3>
+                <p id="floodAlert" class="alert-text">အချက်အလက် စစ်ဆေးနေသည်...</p>
             </div>
         </main>
 
         <!-- Tab Content 2: Tides -->
         <main class="tab-content" id="tides">
-            <div class="card-grid">
-                <div class="card">
-                    <h3>ဒီရေ အတက်ချိန် (အနီးဆုံး)</h3>
-                    <div class="card-value" id="highTideTime">--:--</div>
-                </div>
-                <div class="card">
-                    <h3>ဒီရေ အကျချိန် (အနီးဆုံး)</h3>
-                    <div class="card-value" id="lowTideTime">--:--</div>
-                </div>
-                <div class="card">
-                    <h3>ရေမျက်နှာပြင် ပြောင်းလဲမှု</h3>
-                    <div class="card-value" id="waterLevel">-- m</div>
-                </div>
+            <div class="card">
+                <h3>🌊 ဒီရေတက်ချိန် / ကျချိန်</h3>
+                <p><strong>အမြင့်ဆုံးဒီရေ:</strong> <span id="highTideTime">--</span></p>
+                <p><strong>အနိမ့်ဆုံးဒီရေ:</strong> <span id="lowTideTime">--</span></p>
+            </div>
+            <div class="card">
+                <h3>📈 မြစ်ရေအခြေအနေ</h3>
+                <p>လက်ရှိရေမှတ်: <span id="waterLevel">-- m</span> (စိုးရိမ်ရေမှတ်အောက်)</p>
             </div>
         </main>
 
-        <!-- Tab Content 3: Air & UV -->
+        <!-- Tab Content 3: Environment -->
         <main class="tab-content" id="environment">
             <div class="card-grid">
                 <div class="card">
-                    <h3>လေတိုက်နှုန်း</h3>
-                    <div class="card-value" id="windSpeed">-- km/h</div>
+                    <h3>💨 လေတိုက်နှုန်း</h3>
+                    <p class="value" id="windSpeed">-- km/h</p>
                 </div>
                 <div class="card">
-                    <h3>ခရမ်းလွန်ရောင်ခြည် (UV)</h3>
-                    <div class="card-value" id="uvIndex">--</div>
+                    <h3>☀️ UV Index</h3>
+                    <p class="value" id="uvIndex">--</p>
                 </div>
                 <div class="card">
-                    <h3>လေထုအရည်အသွေး (AQI)</h3>
-                    <div class="card-value" id="aqiValue">--</div>
+                    <h3>🌫️ လေထုအရည်အသွေး (AQI)</h3>
+                    <p class="value" id="aqiValue">--</p>
                 </div>
             </div>
         </main>
 
         <!-- Tab Content 4: AI Insights -->
         <main class="tab-content" id="ai-insights">
-            <div class="ai-box">
-                <h3 class="ai-title">AI အသေးစိတ် သုံးသပ်ခန့်မှန်းချက်</h3>
-                <div class="ai-content-wrapper">
-                    <p id="aiSummaryText" class="ai-gradient-text">
-                        ဒေတာများကို ပိုင်းခြားစိတ်ဖြာနေပါသည်...
-                    </p>
-                    
-                    <!-- Locked Layer for Non-Premium Users -->
-                    <div class="premium-lock-overlay" id="premiumOverlay">
-                        <p>🔒 အသေးစိတ် AI ခန့်မှန်းချက်ကို ကြည့်ရန် Premium ရယူပါ</p>
-                        <span class="price-tag">တစ်ပတ် ၅၀၀ ကျပ် / တစ်လ ၂၀၀၀ ကျပ်</span>
-                        <button class="btn-unlock" onclick="unlockPremiumMock()">စမ်းသပ်မှုအဖြစ် Unlock လုပ်မည်</button>
-                    </div>
-                </div>
+            <div class="card ai-card">
+                <h3>🤖 AI ရေကြောင်း & မိုးလေဝသ သုံးသပ်ချက်</h3>
+                <p id="aiSummaryText">အချက်အလက်များကို တွက်ချက်နေပါသည်...</p>
             </div>
         </main>
+
+        <!-- Premium Lock Overlay -->
+        <div class="premium-overlay" id="premiumOverlay" style="display: none;">
+            <div class="lock-box">
+                <h2>🔒 Premium အင်္ဂါရပ်</h2>
+                <p>ဤအချက်အလက်ကို ကြည့်ရှုရန် Premium သို့ မြှင့်တင်ပါ။</p>
+                <button class="btn-unlock" onclick="unlockPremiumMock()">စမ်းသပ်ရန် ဖွင့်မည်</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Ayeyarwady Weather & River Alerts</p>
+        </footer>
     </div>
 
     <script src="script.js"></script>
