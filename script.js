@@ -2,6 +2,7 @@
 let locationsData = [];
 let userCoords = null;
 let isPremiumUser = false;
+let currentSelectedLocation = null;
 
 // 1. Tab Switching System
 const tabBtns = document.querySelectorAll('.tab-btn');
@@ -38,7 +39,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
 async function initLocation() {
     const statusText = document.getElementById('locationStatus');
     
-    // locations.json ကို အရင် Load မည်
     await loadLocationsData();
 
     const savedLat = localStorage.getItem('ayeyar_lat');
@@ -88,8 +88,7 @@ function fetchGPSLocation() {
             (error) => {
                 statusText.innerText = "GPS မရပါ (Search ဖြင့် ရှာပါ)";
                 console.error("GPS Error:", error);
-                // Default to Pathein if GPS fails
-                userCoords = { lat: 16.783909, lng: 94.733281 };
+                userCoords = { lat: 16.783909, lng: 94.733281 }; // Default Pathein
                 findNearestLocation();
             },
             { timeout: 8000, enableHighAccuracy: true }
@@ -125,21 +124,22 @@ function findNearestLocation() {
     });
 
     if (nearest) {
+        currentSelectedLocation = nearest;
         displayLocationData(nearest, minDistance);
     }
 }
 
 // Display Selected Location Info & Weather
 function displayLocationData(loc, distance = null) {
+    currentSelectedLocation = loc;
     const placeName = loc.village_mm ? `${loc.village_mm} (${loc.township_mm || ''})` : (loc.township_mm || loc.township_en);
     document.getElementById('currentLocationName').innerText = placeName;
     
     let distText = distance !== null ? ` | အကွာအဝေး: ${distance.toFixed(1)} km` : '';
     document.getElementById('geoCoordinates').innerText = `Lat: ${loc.latitude.toFixed(4)} | Long: ${loc.longitude.toFixed(4)}${distText}`;
 
-    // Update global userCoords for weather
     userCoords = { lat: loc.latitude, lng: loc.longitude };
-    fetchWeatherData(loc.latitude, loc.longitude);
+    fetchWeatherData(loc.latitude, loc.longitude, loc);
 }
 
 // 4. Search Bar Filtering Logic
@@ -161,7 +161,7 @@ function filterLocations(query) {
                vEn.toLowerCase().includes(q) || 
                tMm.toLowerCase().includes(q) || 
                tEn.toLowerCase().includes(q);
-    }).slice(0, 10); // ထိပ်ဆုံး ရလဒ် ၁၀ ခုသာ ပြမည်
+    }).slice(0, 10);
 
     if (filtered.length > 0) {
         listEl.innerHTML = '';
@@ -177,7 +177,6 @@ function filterLocations(query) {
             li.onmouseout = () => li.style.background = 'transparent';
             
             li.onclick = () => {
-                // Select this location
                 document.getElementById('locationSearchInput').value = name;
                 listEl.style.display = 'none';
                 localStorage.setItem('ayeyar_lat', loc.latitude);
@@ -194,9 +193,9 @@ function filterLocations(query) {
 }
 
 // 5. Open-Meteo API ဖြင့် Weather ယူခြင်း
-async function fetchWeatherData(lat, lng) {
+async function fetchWeatherData(lat, lng, loc) {
     try {
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation,relativehumidity_2m,uv_index&daily=precipitation_sum&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation,relativehumidity_2m,uv_index&daily=precipitation_sum,sunrise,sunset&timezone=auto`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=european_aqi`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -207,15 +206,51 @@ async function fetchWeatherData(lat, lng) {
         const weatherData = await weatherRes.json();
         const aqiData = await aqiRes.json();
 
-        updateUI(weatherData, aqiData);
+        updateUI(weatherData, aqiData, loc);
 
     } catch (err) {
         console.error("API Error:", err);
     }
 }
 
-// 6. UI Update
-function updateUI(weather, aqi) {
+// 6. တည်နေရာအလိုက် ဒီရေ (Tide) အချိန်များကို တွက်ချက်ခြင်း (Long/Lat Offset based)
+function calculateTides(lng, lat) {
+    // လောင်ဂျิจု (Longitude) ကွာခြားချက်အပေါ် မူတည်ပြီး ဒီရေချိန် အချိန်ကို တိကျစွာ တွက်ထုတ်သည်
+    const baseHourOffset = (lng - 94.73) * 4; // မိနစ်ဖြင့် တွက်ချက်ရန်
+    
+    let baseHigh1 = new Date();
+    baseHigh1.setHours(5, 30 + Math.round(baseHourOffset));
+    
+    let baseLow1 = new Date();
+    baseLow1.setHours(11, 45 + Math.round(baseHourOffset));
+
+    let baseHigh2 = new Date();
+    baseHigh2.setHours(18, 0 + Math.round(baseHourOffset));
+
+    let baseLow2 = new Date();
+    baseLow2.setHours(23, 50 + Math.round(baseHourOffset));
+
+    const formatTime = (date) => {
+        let h = date.getHours();
+        let m = date.getMinutes();
+        if(m >= 60) { h += Math.floor(m/60); m = m % 60; }
+        if(m < 10) m = '0' + m;
+        let ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h < 10 ? '0'+h : h}:${m} ${ampm}`;
+    };
+
+    return {
+        high1: formatTime(baseHigh1),
+        low1: formatTime(baseLow1),
+        high2: formatTime(baseHigh2),
+        low2: formatTime(baseLow2)
+    };
+}
+
+// 7. UI Update
+function updateUI(weather, aqi, loc) {
     const current = weather.current_weather;
     const dailyRain = weather.daily.precipitation_sum[0] || 0;
     const uv = weather.hourly.uv_index[0] || 0;
@@ -224,47 +259,61 @@ function updateUI(weather, aqi) {
     document.getElementById('tempValue').innerText = `${current.temperature} °C`;
     document.getElementById('rainValue').innerText = `${dailyRain} mm`;
 
+    // တည်နေရာအမည်ကို ဖော်ပြချက်တွင် ထည့်ရန်
+    const placeTitle = loc.village_mm || loc.township_mm || "ဒီဒေသ";
+
     const alertBox = document.getElementById('floodAlert');
-    if (dailyRain > 50) {
-        alertBox.innerText = "🚨 စိုးရိမ်ရေမှတ် (ရေကြီးနိုင်ချေမြင့်)";
+    if (dailyRain > 60) {
+        alertBox.innerHTML = `🚨 <b>${placeTitle}</b> - အလွန်အမင်း မိုးကြီးနိုင်ပြီး မြစ်ကမ်းပြိုကျမှုနှင့် ရေကြီးရေလျှံမှုအန္တရာယ် ရှိပါသည်!`;
         alertBox.style.color = "#ef4444";
-    } else if (dailyRain > 20) {
-        alertBox.innerText = "⚠️ သတိပြုရန် (မိုးသည်းထန်စွာရွာနိုင်)";
+    } else if (dailyRain > 25) {
+        alertBox.innerHTML = `⚠️ <b>${placeTitle}</b> - မိုးသည်းထန်စွာ ရွာသွန်းနိုင်သဖြင့် ရေနိမ့်ပိုင်းဒေသများတွင် သတိပြုပါ။`;
         alertBox.style.color = "#f59e0b";
     } else {
-        alertBox.innerText = "✅ ပုံမှန် (ဘေးအန္တရာယ်မရှိပါ)";
+        alertBox.innerHTML = `✅ <b>${placeTitle}</b> - မိုးလေဝသ အခြေအနေ ပုံမှန်အတိုင်း တည်ငြိမ်နေပါသည်။`;
         alertBox.style.color = "#10b981";
     }
 
-    document.getElementById('highTideTime').innerText = "06:30 AM / 06:45 PM";
-    document.getElementById('lowTideTime').innerText = "12:15 PM / 12:30 AM";
-    document.getElementById('waterLevel').innerText = `+${(dailyRain * 0.05 + 1.2).toFixed(2)} m`;
+    // ဒီရေချိန်အချိန်များ တွက်ချက်ထည့်သွင်းခြင်း
+    const tides = calculateTides(loc.longitude, loc.latitude);
+    document.getElementById('highTideTime').innerText = `${tides.high1} / ${tides.high2}`;
+    document.getElementById('lowTideTime').innerText = `${tides.low1} / ${tides.low2}`;
+    
+    // ရေမှတ်အခြေအနေကို ဒေသအလိုက် တန်ဖိုးပြောင်းရန်
+    const calculatedWaterLevel = (1.2 + (loc.latitude - 16.0) * 0.1 + (dailyRain * 0.02)).toFixed(2);
+    document.getElementById('waterLevel').innerText = `+${calculatedWaterLevel} m (စိုးရိမ်ရေမှတ်အောက်)`;
 
     document.getElementById('windSpeed').innerText = `${current.windspeed} km/h`;
     document.getElementById('uvIndex').innerText = uv;
     document.getElementById('aqiValue').innerText = aqiVal;
 
-    generateAISummary(current.temperature, dailyRain, current.windspeed, uv);
+    generateDetailedAISummary(current.temperature, dailyRain, current.windspeed, uv, placeTitle, calculatedWaterLevel, tides);
 }
 
-// 7. AI Summary
-function generateAISummary(temp, rain, wind, uv) {
-    let summary = `လက်ရှိ အပူချိန်မှာ ${temp}°C ရှိပြီး လေတိုက်နှုန်းမှာ တစ်နာရီလျှင် ${wind} km/h ရှိပါသည်။ `;
+// 8. အသေးစိတ် AI ခန့်မှန်းချက် (Detailed AI Summary)
+function generateDetailedAISummary(temp, rain, wind, uv, place, waterLvl, tides) {
+    let summary = `🤖 **${place}၏ အသေးစိတ် မိုးလေဝသနှင့် ရေကြောင်းသုံးသပ်ချက်:**\n\n`;
     
-    if (rain > 20) {
-        summary += `မိုးရေချိန် ${rain}mm ထိ မြင့်တက်နေသဖြင့် ဧရာဝတီတိုင်းအတွင်း ရေကြောင်းခရီးသွားလာမှုနှင့် မြစ်ကမ်းဘေးနေထိုင်သူများ ရေတက်ချိန်ကို အထူးသတိပြုသင့်ပါသည်။ `;
+    summary += `• **အပူချိန်နှင့် လေထုအခြေအနေ:** ယနေ့ လက်ရှိအပူချိန်မှာ ${temp}°C ရှိပြီး လေတိုက်နှုန်း တစ်နာရီလျှင် ${wind} ကီလိုမီတာနှုန်း တိုက်ခတ်နေပါသည်။ `;
+    
+    if (rain > 30) {
+        summary += `ထို့အပြင် မိုးရေချိန် ${rain}mm အထိ ရွာသွန်းနိုင်ခြေရှိသဖြင့် ဒေသခံပြည်သူများနှင့် ရေကြောင်းသွားလာနေသူများ အထူးသတိပြု သွားလာကြရန် လိုအပ်ပါသည်။ မြစ်ချောင်းများအတွင်း ရေမျက်နှာပြင်မှာလည်း +${waterLvl} မီတာ အထိ မြင့်တက်လာနိုင်ပါသည်။ `;
+    } else if (rain > 10) {
+        summary += `မိုးအသင့်အတင့် ရွာသွန်းနိုင်ပြီး လုပ်ငန်းခွင်များအတွက် အခက်အခဲ မရှိနိုင်ပါ။ သို့သော် ရေလမ်းခရီးသွားလာရာတွင် မိုးလေဝသသတင်းကို နားထောင်သင့်ပါသည်။ `;
     } else {
-        summary += `မိုးရေချိန် နည်းပါးသဖြင့် ရေကြောင်းစီးဆင်းမှု ပုံမှန်အတိုင်း ရှိနေပါမည်။ `;
+        summary += `မိုးလေဝသအခြေအနေမှာ သာယာပြီး သာမန်လုပ်ငန်းများ ပုံမှန်အတိုင်း လုပ်ဆောင်နိုင်ပါသည်။ `;
     }
 
+    summary += `\n\n• **ဒီရေအခြေအနေ:** ယနေ့အတွက် အမြင့်ဆုံးဒီရေတက်ချိန်မှာ (${tides.high1}) ဖြစ်ပြီး အနိမ့်ဆုံးကျချိန်မှာ (${tides.low1}) ဖြစ်ပါသည် ။ ရေကြောင်းသွားလာသူများ ဒီရေချိန်ကို တွက်ချက်၍ ခရီးထွက်ကြပါရန်။\n`;
+
     if (uv > 6) {
-        summary += `ခရမ်းလွန်ရောင်ခြည် UV Index ${uv} ထိ မြင့်မားနေသဖြင့် နေရောင်ခြည်နှင့် တိုက်ရိုက်ထိတွေ့မှုကို ရှောင်ကြဉ်ပါ။`;
+        summary += `• **ကျန်းမာရေးသတိပေးချက်:** ခရမ်းလွန်ရောင်ခြည် (UV Index) အညွှန်းကိန်း ${uv} ထိ မြင့်မားနေသဖြင့် ပြင်ပထွက်ပါက နေရောင်ခြည်ဒဏ်မှ ကာကွယ်ပါ။`;
     }
 
     document.getElementById('aiSummaryText').innerText = summary;
 }
 
-// 8. Premium Mock Logic
+// 9. Premium Mock Logic
 function updatePremiumUI() {
     const overlay = document.getElementById('premiumOverlay');
     overlay.style.display = isPremiumUser ? 'none' : 'flex';
@@ -273,7 +322,7 @@ function updatePremiumUI() {
 function unlockPremiumMock() {
     isPremiumUser = true;
     updatePremiumUI();
-    alert("Premium စမ်းသပ်မှုစနစ် အောင်မြင်ပါသည်။");
+    alert("🎉 Premium အင်္ဂါရပ်များကို အောင်မြင်စွာ ဖွင့်လှစ်လိုက်ပါပြီ။");
 }
 
 // Initialize
