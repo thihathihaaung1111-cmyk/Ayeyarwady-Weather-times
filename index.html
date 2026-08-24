@@ -1,69 +1,77 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ayeyarwady Weather</title>
-
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayeyarwady Weather</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header>
-    <h1>🌦️ Ayeyarwady Weather</h1>
-    <p>ဧရာဝတီတိုင်းဒေသကြီး မိုးလေဝသ</p>
-  </header>
+    <header>
+        <h1>🌧️ Ayeyarwady Weather</h1>
+        <p>ဧရာဝတီတိုင်းဒေသကြီး မိုးလေဝသနှင့် ရေထုအခြေအနေ</p>
+    </header>
 
-  <main>
+    <main>
+        <!-- တည်နေရာနှင့် မိုးလေဝသ အကျဉ်း -->
+        <div class="card location-card">
+            <div id="location">📍 တည်နေရာ ရယူရန် နှိပ်ပါ</div>
+            <!-- ခလုတ်ကို အောက်နားတွင် ရိုးရိုးရှင်းရှင်း သေးသေးလေး ပြုလုပ်ထားသည် -->
+            <button id="locationBtn" class="btn-sm">📍 တည်နေရာဖွင့်</button>
+        </div>
 
-    <div id="location">
-      📍 တည်နေရာကို ရှာနေသည်...
-    </div>
+        <!-- အချက်အလက်များ ဖွင့်/ပိတ် ပြုလုပ်နိုင်သော Toggle ခလုတ် -->
+        <button id="toggleDataBtn" class="btn-primary" onclick="toggleWeatherDetails()">
+            📊 မိုးလေဝသ အသေးစိတ် ကြည့်မည်
+        </button>
 
-    <div id="weather">
-      
- <p id="temperature">Temperature : -- °C</p>
+        <!-- သတင်းအချက်အလက် ကတ်များ (အစပိုင်းတွင် ဝှက်ထားမည်) -->
+        <div id="detailsSection" class="hidden-section">
+            
+            <!-- အခြေခံ မိုးလေဝသနှင့် လေတိုက်နှုန်း -->
+            <div class="card">
+                <h3>🌡️ လက်ရှိ မိုးလေဝသ & လေတိုက်နှုန်း</h3>
+                <p id="temperature">အပူချိန်: -- °C</p>
+                <p id="windSpeed">🍃 လေတိုက်နှုန်း: -- km/h</p>
+                <p id="rainChance">🌧️ မိုးရွာနိုင်ခြေ: -- %</p>
+            </div>
 
-  <p id="weatherText">Weather : --</p>
+            <!-- ဒီရေနှင့် ရေကြီး/ရေမြင့်အမှတ် -->
+            <div class="card">
+                <h3>🌊 ဒီရေ အတက်/အကျ & ရေမြင့်အမှတ်များ</h3>
+                <p>📍 ပုသိမ် / မြောင်းမြ / လပွတ္တာ တိုင်တိုင်းထွာချက်</p>
+                <ul>
+                    <li>စိုးရိမ်ရေမှတ်: <b>၁၂.၅ ပေ</b></li>
+                    <li>လက်ရှိ ရေအမှတ်: <b>၉.၂ ပေ (ဘေးကင်းသည်)</b></li>
+                    <li>ဒီရေအတက်ဆုံးအချိန်: <b>မွန်းလွဲ ၂:၃၀ နာရီ</b></li>
+                </ul>
+            </div>
 
-  <p id="rainChance">Rain Chance : -- %</p>
+            <!-- ပရီမီယမ် AI ခန့်မှန်းချက် စနစ် -->
+            <div class="card premium-card">
+                <h3>✨ AI မိုးလေဝသ သုံးသပ်ချက် (Premium)</h3>
+                
+                <!-- ပရီမီယမ် မဝယ်ရသေးပါက ပြသမည့် Card -->
+                <div id="freeUserView">
+                    <p>🔒 AI ခန့်မှန်းချက်နှင့် ငါးဖမ်းလှေများအတွက် အသေးစိတ် သတိပေးချက်များကို ပရီမီယမ်အဖွဲ့ဝင်များသာ ကြည့်ရှုနိုင်ပါသည်။</p>
+                    <div class="pricing">
+                        <span>၁ ပတ် - ၅၀၀ ကျပ်</span> | <span>၁ လ - ၂၀၀၀ ကျပ်</span>
+                    </div>
+                    <button class="btn-gold" onclick="openPaymentModal()">💎 Premium ရယူမည်</button>
+                </div>
 
-    </div>
+                <!-- ပရီမီယမ် ဝယ်ယူပြီးပါက ပြသမည့် Content -->
+                <div id="premiumUserView" style="display:none;">
+                    <p class="ai-text">
+                        <b>🤖 AI သုံးသပ်ချက်:</b> လာမည့် ၃ ရက်အတွင်း ဧရာဝတီတိုင်း မြစ်ဝကျွန်းပေါ်ဒေသများတွင် မိုးသည်းထန်စွာ ရွာသွန်းနိုင်ပြီး ပင်လယ်ပြင်တွင် လှိုင်းအမြင့် ၈ ပေထိ ရှိနိုင်သဖြင့် လှေလုပ်ငန်းများ သတိပြုရန် လိုအပ်ပါသည်။
+                    </p>
+                </div>
+            </div>
 
-    <button id="locationBtn">
-      တည်နေရာဖွင့်ပါ
-    </button>
+        </div>
+    </main>
 
-  </main>
-
-  <script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
-
-<!-- 24-Hour Forecast Section -->
-<div class="forecast-section">
-  <h3>၂၄ နာရီ ခန့်မှန်းချက်</h3>
-  <div id="hourly-forecast" class="scroll-container">
-    <!-- JavaScript ကနေ အချက်အလက်များ လာထည့်ပေးမည် -->
-  </div>
-</div>
-
-<!-- 7-Day Forecast Section -->
-<div class="forecast-section">
-  <h3>၇ ရက်စာ ခန့်မှန်းချက်</h3>
-  <div id="daily-forecast" class="forecast-list">
-    <!-- JavaScript ကနေ အချက်အလက်များ လာထည့်ပေးမည် -->
-  </div>
-</div>
-
-<!-- Tide / Sea Water Section -->
-<div class="forecast-section">
-  <h3>🌊 ဒီရေ အတက်/အကျ အခြေအနေ</h3>
-  <div id="tide-info" class="tide-container">
-    <p>ဒီရေ အချက်အလက် ရယူနေသည်...</p>
-  </div>
-</div>
-
-
-
