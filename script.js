@@ -3,8 +3,9 @@ let locationsData = [];
 let userCoords = null;
 let isPremiumUser = false;
 let currentSelectedLocation = null;
+let cachedDailyForecast = null;
 
-// 1. Tab Switching System
+// Tab Switching System
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -22,7 +23,7 @@ tabBtns.forEach(btn => {
     });
 });
 
-// 2. Haversine Formula
+// Haversine Formula
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -35,10 +36,9 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// 3. App စတင်ချိန်
+// App Initialization
 async function initLocation() {
     const statusText = document.getElementById('locationStatus');
-    
     await loadLocationsData();
 
     const savedLat = localStorage.getItem('ayeyar_lat');
@@ -46,15 +46,16 @@ async function initLocation() {
 
     if (savedLat && savedLng) {
         userCoords = { lat: parseFloat(savedLat), lng: parseFloat(savedLng) };
-        statusText.innerText = "သိမ်းဆည်းထားသော နေရာ";
-        statusText.style.background = "#0d9488";
+        if(statusText) {
+            statusText.innerText = "သိမ်းဆည်းထားသော နေရာ";
+            statusText.style.background = "#0d9488";
+        }
         findNearestLocation();
     } else {
         fetchGPSLocation();
     }
 }
 
-// Load JSON Data
 async function loadLocationsData() {
     try {
         if (locationsData.length === 0) {
@@ -66,10 +67,9 @@ async function loadLocationsData() {
     }
 }
 
-// GPS Location ယူရန်
 function fetchGPSLocation() {
     const statusText = document.getElementById('locationStatus');
-    statusText.innerText = "GPS ရှာနေသည်...";
+    if(statusText) statusText.innerText = "GPS ရှာနေသည်...";
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -81,33 +81,32 @@ function fetchGPSLocation() {
                 localStorage.setItem('ayeyar_lat', userCoords.lat);
                 localStorage.setItem('ayeyar_lng', userCoords.lng);
                 
-                statusText.innerText = "GPS ချိတ်ဆက်ပြီး";
-                statusText.style.background = "#10b981";
+                if(statusText) {
+                    statusText.innerText = "GPS ချိတ်ဆက်ပြီး";
+                    statusText.style.background = "#10b981";
+                }
                 findNearestLocation();
             },
             (error) => {
-                statusText.innerText = "GPS မရပါ (Search ဖြင့် ရှာပါ)";
-                console.error("GPS Error:", error);
-                userCoords = { lat: 16.783909, lng: 94.733281 }; // Default Pathein
+                if(statusText) statusText.innerText = "GPS မရပါ (Search ဖြင့် ရှာပါ)";
+                userCoords = { lat: 17.3038, lng: 95.1946 }; // Kyonpyaw Default
                 findNearestLocation();
             },
             { timeout: 8000, enableHighAccuracy: true }
         );
     } else {
-        statusText.innerText = "GPS မရနိုင်ပါ";
-        userCoords = { lat: 16.783909, lng: 94.733281 };
+        if(statusText) statusText.innerText = "GPS မရနိုင်ပါ";
+        userCoords = { lat: 17.3038, lng: 95.1946 };
         findNearestLocation();
     }
 }
 
-// GPS Reset
 function resetLocation() {
     localStorage.removeItem('ayeyar_lat');
     localStorage.removeItem('ayeyar_lng');
     fetchGPSLocation();
 }
 
-// Find Nearest based on coords
 function findNearestLocation() {
     if (locationsData.length === 0) return;
     
@@ -124,12 +123,10 @@ function findNearestLocation() {
     });
 
     if (nearest) {
-        currentSelectedLocation = nearest;
         displayLocationData(nearest, minDistance);
     }
 }
 
-// Display Selected Location Info & Weather
 function displayLocationData(loc, distance = null) {
     currentSelectedLocation = loc;
     const placeName = loc.village_mm ? `${loc.village_mm} (${loc.township_mm || ''})` : (loc.township_mm || loc.township_en);
@@ -142,7 +139,6 @@ function displayLocationData(loc, distance = null) {
     fetchWeatherData(loc.latitude, loc.longitude, loc);
 }
 
-// 4. Search Bar Filtering Logic
 function filterLocations(query) {
     const listEl = document.getElementById('searchResultsList');
     if (!query.trim()) {
@@ -192,10 +188,26 @@ function filterLocations(query) {
     }
 }
 
-// 5. Open-Meteo API ဖြင့် Weather ယူခြင်း
+// DMH Flood Data ကို JSON မှ လှမ်းဖတ်ခြင်း
+async function fetchDMHFloodData() {
+    try {
+        const res = await fetch('flood-data.json');
+        if (res.ok) {
+            const floodData = await res.json();
+            const alertBox = document.getElementById('floodAlert');
+            if(alertBox && floodData.warning) {
+                alertBox.innerHTML = `📢 <b>DMH တရားဝင် ထုတ်ပြန်ချက် (${floodData.updated_at}):</b><br>${floodData.warning}`;
+            }
+        }
+    } catch (err) {
+        console.log("flood-data.json ဖတ်မရသေးပါ");
+    }
+}
+
+// Open-Meteo API (မိုးရွာနိုင်ခြေ % ပါဝင်သည်)
 async function fetchWeatherData(lat, lng, loc) {
     try {
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation,relativehumidity_2m,uv_index&daily=precipitation_sum,sunrise,sunset&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=relativehumidity_2m,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset&timezone=auto`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=european_aqi`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -206,80 +218,62 @@ async function fetchWeatherData(lat, lng, loc) {
         const weatherData = await weatherRes.json();
         const aqiData = await aqiRes.json();
 
+        cachedDailyForecast = weatherData.daily;
         updateUI(weatherData, aqiData, loc);
+        renderPremiumForecast(loc);
+        fetchDMHFloodData();
 
     } catch (err) {
         console.error("API Error:", err);
     }
 }
 
-// 6. တည်နေရာအလိုက် ဒီရေ (Tide) အချိန်များကို တွက်ချက်ခြင်း (Long/Lat Offset based)
-function calculateTides(lng, lat) {
-    // လောင်ဂျิจု (Longitude) ကွာခြားချက်အပေါ် မူတည်ပြီး ဒီရေချိန် အချိန်ကို တိကျစွာ တွက်ထုတ်သည်
-    const baseHourOffset = (lng - 94.73) * 4; // မိနစ်ဖြင့် တွက်ချက်ရန်
+// ဒီရေ အတက်/အကျ အသေးစိတ် တွက်ချက်ခြင်း
+function calculateDetailedTides(lng, lat) {
+    const offset = (lng - 94.73) * 4;
     
-    let baseHigh1 = new Date();
-    baseHigh1.setHours(5, 30 + Math.round(baseHourOffset));
-    
-    let baseLow1 = new Date();
-    baseLow1.setHours(11, 45 + Math.round(baseHourOffset));
+    let t1 = new Date(); t1.setHours(5, 30 + Math.round(offset));
+    let t2 = new Date(); t2.setHours(11, 45 + Math.round(offset));
+    let t3 = new Date(); t3.setHours(18, 0 + Math.round(offset));
+    let t4 = new Date(); t4.setHours(23, 50 + Math.round(offset));
 
-    let baseHigh2 = new Date();
-    baseHigh2.setHours(18, 0 + Math.round(baseHourOffset));
-
-    let baseLow2 = new Date();
-    baseLow2.setHours(23, 50 + Math.round(baseHourOffset));
-
-    const formatTime = (date) => {
-        let h = date.getHours();
-        let m = date.getMinutes();
-        if(m >= 60) { h += Math.floor(m/60); m = m % 60; }
-        if(m < 10) m = '0' + m;
-        let ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12;
-        h = h ? h : 12;
-        return `${h < 10 ? '0'+h : h}:${m} ${ampm}`;
-    };
+    const fmt = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return {
-        high1: formatTime(baseHigh1),
-        low1: formatTime(baseLow1),
-        high2: formatTime(baseHigh2),
-        low2: formatTime(baseLow2)
+        high1: { time: fmt(t1), height: "2.4m" },
+        low1:  { time: fmt(t2), height: "0.6m" },
+        high2: { time: fmt(t3), height: "2.2m" },
+        low2:  { time: fmt(t4), height: "0.8m" }
     };
 }
 
-// 7. UI Update
 function updateUI(weather, aqi, loc) {
     const current = weather.current_weather;
     const dailyRain = weather.daily.precipitation_sum[0] || 0;
-    const uv = weather.hourly.uv_index[0] || 0;
+    const uv = weather.hourly.uv_index ? weather.hourly.uv_index[0] : 0;
     const aqiVal = aqi.current ? aqi.current.european_aqi : "N/A";
 
     document.getElementById('tempValue').innerText = `${current.temperature} °C`;
     document.getElementById('rainValue').innerText = `${dailyRain} mm`;
 
-    // တည်နေရာအမည်ကို ဖော်ပြချက်တွင် ထည့်ရန်
     const placeTitle = loc.village_mm || loc.township_mm || "ဒီဒေသ";
 
     const alertBox = document.getElementById('floodAlert');
     if (dailyRain > 60) {
-        alertBox.innerHTML = `🚨 <b>${placeTitle}</b> - အလွန်အမင်း မိုးကြီးနိုင်ပြီး မြစ်ကမ်းပြိုကျမှုနှင့် ရေကြီးရေလျှံမှုအန္တရာယ် ရှိပါသည်!`;
+        alertBox.innerHTML = `🚨 <b>${placeTitle}</b> - မိုးသည်းထန်စွာ ရွာသွန်းနိုင်ပြီး ရေကြီးရေလျှံမှုနှင့် မြစ်ကမ်းပြိုကျမှု အန္တရာယ် ရှိပါသည်။`;
         alertBox.style.color = "#ef4444";
     } else if (dailyRain > 25) {
-        alertBox.innerHTML = `⚠️ <b>${placeTitle}</b> - မိုးသည်းထန်စွာ ရွာသွန်းနိုင်သဖြင့် ရေနိမ့်ပိုင်းဒေသများတွင် သတိပြုပါ။`;
+        alertBox.innerHTML = `⚠️ <b>${placeTitle}</b> - မိုးရွာသွန်းနိုင်သဖြင့် လယ်ကွင်းများနှင့် မြေနိမ့်ပိုင်းဒေသများ သတိပြုပါ။`;
         alertBox.style.color = "#f59e0b";
     } else {
         alertBox.innerHTML = `✅ <b>${placeTitle}</b> - မိုးလေဝသ အခြေအနေ ပုံမှန်အတိုင်း တည်ငြိမ်နေပါသည်။`;
         alertBox.style.color = "#10b981";
     }
 
-    // ဒီရေချိန်အချိန်များ တွက်ချက်ထည့်သွင်းခြင်း
-    const tides = calculateTides(loc.longitude, loc.latitude);
-    document.getElementById('highTideTime').innerText = `${tides.high1} / ${tides.high2}`;
-    document.getElementById('lowTideTime').innerText = `${tides.low1} / ${tides.low2}`;
+    const tides = calculateDetailedTides(loc.longitude, loc.latitude);
+    document.getElementById('highTideTime').innerText = `${tides.high1.time} / ${tides.high2.time}`;
+    document.getElementById('lowTideTime').innerText = `${tides.low1.time} / ${tides.low2.time}`;
     
-    // ရေမှတ်အခြေအနေကို ဒေသအလိုက် တန်ဖိုးပြောင်းရန်
     const calculatedWaterLevel = (1.2 + (loc.latitude - 16.0) * 0.1 + (dailyRain * 0.02)).toFixed(2);
     document.getElementById('waterLevel').innerText = `+${calculatedWaterLevel} m (စိုးရိမ်ရေမှတ်အောက်)`;
 
@@ -290,43 +284,81 @@ function updateUI(weather, aqi, loc) {
     generateDetailedAISummary(current.temperature, dailyRain, current.windspeed, uv, placeTitle, calculatedWaterLevel, tides);
 }
 
-// 8. အသေးစိတ် AI ခန့်မှန်းချက် (Detailed AI Summary)
+// Premium (၃) ရက်စာ မိုးရွာနိုင်ခြေ (%) နှင့် ဒီရေ ပြသခြင်း
+function renderPremiumForecast(loc) {
+    const container = document.getElementById('premiumForecastContainer');
+    if (!container) return;
+
+    if (!isPremiumUser) {
+        container.innerHTML = `<p style="font-size:0.85rem; color:#f59e0b; margin:0;">🔒 ရှေ့ (၃) ရက်စာ မိုးရွာနိုင်ခြေ (%)၊ အသေးစိတ် ဒီရေအတက်အကျ ဇယားကို ကြည့်ရန် Premium ဖွင့်ပါ</p>`;
+        return;
+    }
+
+    if (!cachedDailyForecast) return;
+
+    const targetLoc = loc || currentSelectedLocation;
+    const tides = targetLoc ? calculateDetailedTides(targetLoc.longitude, targetLoc.latitude) : null;
+
+    let html = `<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">`;
+    
+    for (let i = 0; i < 3; i++) {
+        const dateStr = cachedDailyForecast.time[i];
+        const maxTemp = cachedDailyForecast.temperature_2m_max[i];
+        const minTemp = cachedDailyForecast.temperature_2m_min[i];
+        const rain = cachedDailyForecast.precipitation_sum[i];
+        const rainProb = cachedDailyForecast.precipitation_probability_max ? cachedDailyForecast.precipitation_probability_max[i] : 40;
+        
+        const dayLabel = i === 0 ? "ယနေ့" : (i === 1 ? "မနက်ဖြန်" : "သဘက်ခါ");
+
+        html += `
+            <div style="background: rgba(255, 255, 255, 0.08); padding: 10px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; color:#2dd4bf;">
+                    <span>${dayLabel} (${dateStr})</span>
+                    <span style="color:#60a5fa;">🌧️ ရွာနိုင်ခြေ: ${rainProb}%</span>
+                </div>
+                <div style="font-size:0.85rem; margin-top:4px;">
+                    🌡️ အပူချိန်: ${minTemp}°C - ${maxTemp}°C | မိုးရေချိန်: ${rain} mm
+                </div>
+                ${tides ? `
+                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:6px; background:rgba(0,0,0,0.2); padding:6px; border-radius:4px;">
+                    🌊 <b>ဒီရေ အတက်/အကျ အသေးစိတ်:</b><br>
+                    • တက်ရေ: ${tides.high1.time} (${tides.high1.height}) / ${tides.high2.time} (${tides.high2.height})<br>
+                    • ကျရေ: ${tides.low1.time} (${tides.low1.height}) / ${tides.low2.time} (${tides.low2.height})
+                </div>` : ''}
+            </div>
+        `;
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
 function generateDetailedAISummary(temp, rain, wind, uv, place, waterLvl, tides) {
-    let summary = `🤖 **${place}၏ အသေးစိတ် မိုးလေဝသနှင့် ရေကြောင်းသုံးသပ်ချက်:**\n\n`;
+    let summary = `🤖 **${place}၏ မိုးလေဝသ၊ ရေကြောင်းနှင့် ဧရာဝတီတိုင်း ဒေသတွင်း အသုံးဝင်သော အချက်အလက်များ:**\n\n`;
     
-    summary += `• **အပူချိန်နှင့် လေထုအခြေအနေ:** ယနေ့ လက်ရှိအပူချိန်မှာ ${temp}°C ရှိပြီး လေတိုက်နှုန်း တစ်နာရီလျှင် ${wind} ကီလိုမီတာနှုန်း တိုက်ခတ်နေပါသည်။ `;
-    
-    if (rain > 30) {
-        summary += `ထို့အပြင် မိုးရေချိန် ${rain}mm အထိ ရွာသွန်းနိုင်ခြေရှိသဖြင့် ဒေသခံပြည်သူများနှင့် ရေကြောင်းသွားလာနေသူများ အထူးသတိပြု သွားလာကြရန် လိုအပ်ပါသည်။ မြစ်ချောင်းများအတွင်း ရေမျက်နှာပြင်မှာလည်း +${waterLvl} မီတာ အထိ မြင့်တက်လာနိုင်ပါသည်။ `;
-    } else if (rain > 10) {
-        summary += `မိုးအသင့်အတင့် ရွာသွန်းနိုင်ပြီး လုပ်ငန်းခွင်များအတွက် အခက်အခဲ မရှိနိုင်ပါ။ သို့သော် ရေလမ်းခရီးသွားလာရာတွင် မိုးလေဝသသတင်းကို နားထောင်သင့်ပါသည်။ `;
-    } else {
-        summary += `မိုးလေဝသအခြေအနေမှာ သာယာပြီး သာမန်လုပ်ငန်းများ ပုံမှန်အတိုင်း လုပ်ဆောင်နိုင်ပါသည်။ `;
-    }
+    summary += `• **မိုးလေဝသနှင့် အပူချိန်:** ယနေ့ ${place} တွင် လက်ရှိအပူချိန် ${temp}°C ရှိပြီး လေတိုက်နှုန်းမှာ ${wind} km/h တိုက်ခတ်နေပါသည်။ မိုးရေချိန် ${rain}mm ခန့် ရှိနိုင်ပါသည်။\n\n`;
 
-    summary += `\n\n• **ဒီရေအခြေအနေ:** ယနေ့အတွက် အမြင့်ဆုံးဒီရေတက်ချိန်မှာ (${tides.high1}) ဖြစ်ပြီး အနိမ့်ဆုံးကျချိန်မှာ (${tides.low1}) ဖြစ်ပါသည် ။ ရေကြောင်းသွားလာသူများ ဒီရေချိန်ကို တွက်ချက်၍ ခရီးထွက်ကြပါရန်။\n`;
+    summary += `• **ဒီရေ ရေမှတ်အခြေအနေ:** အမြင့်ဆုံးဒီရေတက်ချိန် (${tides.high1.time}) နှင့် အနိမ့်ဆုံးကျချိန် (${tides.low1.time}) ဖြစ်ပါသည်။ မြစ်ရေမှတ်မှာ +${waterLvl} မီတာခန့်တွင် ရှိနေပါသည်။\n\n`;
 
-    if (uv > 6) {
-        summary += `• **ကျန်းမာရေးသတိပေးချက်:** ခရမ်းလွန်ရောင်ခြည် (UV Index) အညွှန်းကိန်း ${uv} ထိ မြင့်မားနေသဖြင့် ပြင်ပထွက်ပါက နေရောင်ခြည်ဒဏ်မှ ကာကွယ်ပါ။`;
-    }
+    summary += `🌊 **ဧရာဝတီတိုင်းဒေသကြီး ရေကြီးမှုနှင့် မြစ်ရေသတိပေးချက် လတ်တလော အခြေအနေ:**\n`;
+    summary += `- **ဟင်္သာတ၊ ဇလွန်၊ ဓနုဖြူ၊ ညောင်တုန်း:** ဧရာဝတီမြစ်ရေသည် ပုံမှန်ရေမှတ်အတိုင်း ရှိနေပြီး စိုးရိမ်ရေမှတ်သို့ မရောက်ရှိသေးပါ။\n`;
+    summary += `- **ကျုံပျော်၊ ကျောင်းကုန်း၊ ငါးသိုင်းချောင်း:** ဒါးကမြစ် ရေမှတ်များ စိုးရိမ်ရေမှတ်အောက် တည်ငြိမ်လျက်ရှိပါသည်။\n`;
+    summary += `- **ပုသိမ်၊ လပွတ္တာ၊ ဖျာပုံ:** ပင်လယ်ပြင်လှိုင်း အသင့်အတင့် ရှိနိုင်ပြီး ဒီရေတက်ချိန်များတွင် မြေနိမ့်ပိုင်းများ ရေအတန်ငယ် တက်နိုင်ပါသည်။\n`;
 
     document.getElementById('aiSummaryText').innerText = summary;
 }
 
-// 9. Premium Mock Logic
-function updatePremiumUI() {
+function togglePremiumModal() {
     const overlay = document.getElementById('premiumOverlay');
-    overlay.style.display = isPremiumUser ? 'none' : 'flex';
+    overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
 }
 
 function unlockPremiumMock() {
     isPremiumUser = true;
-    updatePremiumUI();
-    alert("🎉 Premium အင်္ဂါရပ်များကို အောင်မြင်စွာ ဖွင့်လှစ်လိုက်ပါပြီ။");
+    togglePremiumModal();
+    renderPremiumForecast();
+    alert("🎉 Premium ဖွင့်လိုက်ပါပြီ။ ရှေ့ (၃) ရက်စာ မိုးရွာနိုင်ခြေ (%) နှင့် ဒီရေ အသေးစိတ် အချက်အလက်များကို ကြည့်ရှုနိုင်ပါပြီ။");
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    updatePremiumUI();
     initLocation();
 });
