@@ -14,13 +14,16 @@ tabBtns.forEach(btn => {
 
         btn.classList.add('active');
         const target = btn.getAttribute('data-target');
-        document.getElementById(target).classList.add('active');
+        const targetElement = document.getElementById(target);
+        if(targetElement) {
+            targetElement.classList.add('active');
+        }
     });
 });
 
 // 2. Haversine Formula (GPS အကွာအဝေး တွက်ချက်ရန်)
 function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth radius in km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -31,42 +34,73 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// 3. User ရဲ့ GPS နေရာကို တောင်းယူခြင်း
-function getUserLocation() {
+// 3. App စတင်ချိန်တွင် သိမ်းဆည်းထားသော နေရာရှိမရှိ စစ်ဆေးခြင်း
+async function initLocation() {
     const statusText = document.getElementById('locationStatus');
     
+    // အရင်က သိမ်းထားပြီးသား နေရာရှိမရှိ စစ်မည်
+    const savedLat = localStorage.getItem('ayeyar_lat');
+    const savedLng = localStorage.getItem('ayeyar_lng');
+
+    if (savedLat && savedLng) {
+        userCoords = { lat: parseFloat(savedLat), lng: parseFloat(savedLng) };
+        statusText.innerText = "မှတ်သားထားသော တည်နေရာ";
+        statusText.style.background = "#0d9488";
+        
+        // locations.json ကို အရင် Load လုပ်ပြီးမှ အနီးဆုံးနေရာ ရှာမည်
+        await loadLocationsAndFindNearest();
+    } else {
+        fetchGPSLocation();
+    }
+}
+
+// GPS အသစ်ယူရန် (ပုသိမ်ဟု ဇွတ်မတပ်ဘဲ GPS ကို အပြည့်အဝ အချိန်ပေးရှာမည်)
+function fetchGPSLocation() {
+    const statusText = document.getElementById('locationStatus');
+    statusText.innerText = "GPS ဖြင့် တည်နေရာရှာနေသည်...";
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 userCoords = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
                 };
+                // LocalStorage တွင် မှတ်ထားမည်
+                localStorage.setItem('ayeyar_lat', userCoords.lat);
+                localStorage.setItem('ayeyar_lng', userCoords.lng);
+                
                 statusText.innerText = "GPS ချိတ်ဆက်ပြီး";
                 statusText.style.background = "#10b981";
-                findNearestLocation();
+                await loadLocationsAndFindNearest();
             },
             (error) => {
-                statusText.innerText = "GPS ယူ၍မရပါ (Pathein ကို အသုံးပြုမည်)";
-                // GPS မရပါက Pathein ၏ Coords ကို Default ထားခြင်း
-                userCoords = { lat: 16.783909, lng: 94.733281 };
-                findNearestLocation();
-            }
+                statusText.innerText = "GPS ရယူ၍မရပါ (ဖုန်း Location ဖွင့်ပါ)";
+                console.error("GPS Error:", error);
+            },
+            { timeout: 10000, enableHighAccuracy: true } // 10 စက္ကန့်အထိ တိကျစွာ GPS စောင့်ရှောက်ရှာဖွေမည်
         );
     } else {
-        statusText.innerText = "GPS Support မလုပ်ပါ";
-        userCoords = { lat: 16.783909, lng: 94.733281 };
-        findNearestLocation();
+        statusText.innerText = "ဤ Browser တွင် GPS မရနိုင်ပါ";
     }
 }
 
-// 4. locations.json ထဲမှ အနီးဆုံးနေရာ ရှာခြင်း
-async function findNearestLocation() {
+// တည်နေရာအသစ် ပြန်လည်ပြောင်းလဲလိုပါက (Reset ခလုတ်နှိပ်လျှင်)
+function resetLocation() {
+    localStorage.removeItem('ayeyar_lat');
+    localStorage.removeItem('ayeyar_lng');
+    document.getElementById('currentLocationName').innerText = "တည်နေရာအသစ် ရှာဖွေနေပါသည်...";
+    fetchGPSLocation();
+}
+
+// 4. locations.json ကို Load လုပ်ပြီး အနီးဆုံးရွာ/မြို့ တည်နေရာ အမှန်အတိုင်း ရှာခြင်း
+async function loadLocationsAndFindNearest() {
     try {
-        const res = await fetch('locations.json');
-        locationsData = await res.json();
+        if (locationsData.length === 0) {
+            const res = await fetch('locations.json');
+            locationsData = await res.json();
+        }
         
-        // Null မဟုတ်သော Data များသာ ယူမည်
         const validLocations = locationsData.filter(loc => loc.latitude && loc.longitude);
         
         let nearest = null;
@@ -81,24 +115,22 @@ async function findNearestLocation() {
         });
 
         if (nearest) {
-            document.getElementById('currentLocationName').innerText = `${nearest.village_mm || nearest.village_en} (${nearest.township_mm || nearest.township_en})`;
-            document.getElementById('geoCoordinates').innerText = `Lat: ${userCoords.lat.toFixed(4)} | Long: ${userCoords.lng.toFixed(4)} | အကွာအဝေး: ${minDistance.toFixed(1)} km`;
+            const placeName = nearest.village_mm ? `${nearest.village_mm} (${nearest.township_mm || ''})` : nearest.township_en;
+            document.getElementById('currentLocationName').innerText = placeName;
+            document.getElementById('geoCoordinates').innerText = `Lat: ${userCoords.lat.toFixed(4)} | Long: ${userCoords.lng.toFixed(4)} | အနီးဆုံးရွာ/မြို့နှင့် အကွာအဝေး: ${minDistance.toFixed(1)} km`;
             
-            // Weather & Environmental Data Fetch လုပ်ရန်
             fetchWeatherData(userCoords.lat, userCoords.lng);
         }
     } catch (err) {
         console.error("locations.json ဖတ်မရပါ:", err);
+        fetchWeatherData(userCoords.lat, userCoords.lng);
     }
 }
 
 // 5. Open-Meteo API ဖြင့် Weather, Wind, UV, AQI Data များ ယူခြင်း
 async function fetchWeatherData(lat, lng) {
     try {
-        // Open-Meteo Weather API
         const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation,relativehumidity_2m,uv_index&daily=precipitation_sum&timezone=auto`;
-        
-        // Open-Meteo Air Quality API
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=european_aqi`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -109,7 +141,6 @@ async function fetchWeatherData(lat, lng) {
         const weatherData = await weatherRes.json();
         const aqiData = await aqiRes.json();
 
-        // UI တွင် ဒေတာများ ထည့်သွင်းခြင်း
         updateUI(weatherData, aqiData);
 
     } catch (err) {
@@ -117,18 +148,16 @@ async function fetchWeatherData(lat, lng) {
     }
 }
 
-// 6. UI Data အသစ်ပြင်ဆင်ခြင်း & AI Logic
+// 6. UI Data များ ထည့်သွင်းခြင်း & AI Logic
 function updateUI(weather, aqi) {
     const current = weather.current_weather;
     const dailyRain = weather.daily.precipitation_sum[0] || 0;
     const uv = weather.hourly.uv_index[0] || 0;
     const aqiVal = aqi.current ? aqi.current.european_aqi : "N/A";
 
-    // Overview Tab
     document.getElementById('tempValue').innerText = `${current.temperature} °C`;
     document.getElementById('rainValue').innerText = `${dailyRain} mm`;
 
-    // Flood Warning Logic (မိုးရေချိန်ပေါ်မူတည်၍ သတိပေးချက်ထုတ်ခြင်း)
     const alertBox = document.getElementById('floodAlert');
     if (dailyRain > 50) {
         alertBox.innerText = "🚨 စိုးရိမ်ရေမှတ် (ရေကြီးနိုင်ချေမြင့်)";
@@ -141,23 +170,20 @@ function updateUI(weather, aqi) {
         alertBox.style.color = "#10b981";
     }
 
-    // Tides Tab Mock Calculations (ဒီရေအတက်အကျ ခန်းမှန်းတွက်ချက်မှု)
     document.getElementById('highTideTime').innerText = "06:30 AM / 06:45 PM";
     document.getElementById('lowTideTime').innerText = "12:15 PM / 12:30 AM";
     document.getElementById('waterLevel').innerText = `+${(dailyRain * 0.05 + 1.2).toFixed(2)} m`;
 
-    // Environment Tab
     document.getElementById('windSpeed').innerText = `${current.windspeed} km/h`;
     document.getElementById('uvIndex').innerText = uv;
     document.getElementById('aqiValue').innerText = aqiVal;
 
-    // AI Summary Generator Logic
     generateAISummary(current.temperature, dailyRain, current.windspeed, uv);
 }
 
-// 7. AI Text Generation Logic (အခြေအနေပေါ် မူတည်ပြီး စာတိုထုတ်ပေးခြင်း)
+// 7. AI Text Generation Logic
 function generateAISummary(temp, rain, wind, uv) {
-    let summary = `လက်ရှိ အပူချိန်မှာ ${temp}°C ရှိပြီး လေတိုက်နှုန်းမှာတစ်နာရီ ${wind} km/h ရှိပါသည်။ `;
+    let summary = `လက်ရှိ အပူချိန်မှာ ${temp}°C ရှိပြီး လေတိုက်နှုန်းမှာ တစ်နာရီလျှင် ${wind} km/h ရှိပါသည်။ `;
     
     if (rain > 20) {
         summary += `မိုးရေချိန် ${rain}mm ထိ မြင့်တက်နေသဖြင့် ဧရာဝတီတိုင်းအတွင်း ရေကြောင်းခရီးသွားလာမှုနှင့် မြစ်ကမ်းဘေးနေထိုင်သူများ ရေတက်ချိန်ကို အထူးသတိပြုသင့်ပါသည်။ `;
@@ -187,5 +213,5 @@ function unlockPremiumMock() {
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     updatePremiumUI();
-    getUserLocation();
+    initLocation();
 });
