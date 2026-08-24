@@ -3,74 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayeyarwady Weather</title>
+    <title>ဧရာဝတီ ရေကြောင်းနှင့် မိုးလေဝသ သတင်းလွှာ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <h1>🌧️ Ayeyarwady Weather</h1>
-        <p>ဧရာဝတီတိုင်းဒေသကြီး မိုးလေဝသနှင့် ရေထုအခြေအနေ</p>
-    </header>
-
-    <main>
-        <!-- တည်နေရာနှင့် မိုးလေဝသ အကျဉ်း -->
-        <div class="card location-card">
-            <div id="location">📍 တည်နေရာ ရယူရန် နှိပ်ပါ</div>
-            <!-- ခလုတ်ကို အောက်နားတွင် ရိုးရိုးရှင်းရှင်း သေးသေးလေး ပြုလုပ်ထားသည် -->
-            <button id="locationBtn" class="btn-sm">📍 တည်နေရာဖွင့်</button>
-        </div>
-
-        <!-- အချက်အလက်များ ဖွင့်/ပိတ် ပြုလုပ်နိုင်သော Toggle ခလုတ် -->
-        <button id="toggleDataBtn" class="btn-primary" onclick="toggleWeatherDetails()">
-            📊 မိုးလေဝသ အသေးစိတ် ကြည့်မည်
-        </button>
-
-        <!-- သတင်းအချက်အလက် ကတ်များ (အစပိုင်းတွင် ဝှက်ထားမည်) -->
-        <div id="detailsSection" class="hidden-section">
-            
-            <!-- အခြေခံ မိုးလေဝသနှင့် လေတိုက်နှုန်း -->
-            <div class="card">
-                <h3>🌡️ လက်ရှိ မိုးလေဝသ & လေတိုက်နှုန်း</h3>
-                <p id="temperature">အပူချိန်: -- °C</p>
-                <p id="windSpeed">🍃 လေတိုက်နှုန်း: -- km/h</p>
-                <p id="rainChance">🌧️ မိုးရွာနိုင်ခြေ: -- %</p>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo-area">
+                <h1>ဧရာဝတီ Weather & River Alerts</h1>
+                <span class="badge-status" id="locationStatus">GPS ရှာဖွေနေသည်...</span>
             </div>
+            <button class="btn-premium" id="premiumBtn">⭐ Premium သို့မြှင့်ရန်</button>
+        </header>
 
-            <!-- ဒီရေနှင့် ရေကြီး/ရေမြင့်အမှတ် -->
-            <div class="card">
-                <h3>🌊 ဒီရေ အတက်/အကျ & ရေမြင့်အမှတ်များ</h3>
-                <p>📍 ပုသိမ် / မြောင်းမြ / လပွတ္တာ တိုင်တိုင်းထွာချက်</p>
-                <ul>
-                    <li>စိုးရိမ်ရေမှတ်: <b>၁၂.၅ ပေ</b></li>
-                    <li>လက်ရှိ ရေအမှတ်: <b>၉.၂ ပေ (ဘေးကင်းသည်)</b></li>
-                    <li>ဒီရေအတက်ဆုံးအချိန်: <b>မွန်းလွဲ ၂:၃၀ နာရီ</b></li>
-                </ul>
-            </div>
+        <!-- Dynamic Location Info -->
+        <section class="current-location-card">
+            <h2 id="currentLocationName">အနီးဆုံးနေရာကို ရှာဖွေနေပါသည်...</h2>
+            <p id="geoCoordinates" class="sub-text">Lat: -- | Long: --</p>
+        </section>
 
-            <!-- ပရီမီယမ် AI ခန့်မှန်းချက် စနစ် -->
-            <div class="card premium-card">
-                <h3>✨ AI မိုးလေဝသ သုံးသပ်ချက် (Premium)</h3>
-                
-                <!-- ပရီမီယမ် မဝယ်ရသေးပါက ပြသမည့် Card -->
-                <div id="freeUserView">
-                    <p>🔒 AI ခန့်မှန်းချက်နှင့် ငါးဖမ်းလှေများအတွက် အသေးစိတ် သတိပေးချက်များကို ပရီမီယမ်အဖွဲ့ဝင်များသာ ကြည့်ရှုနိုင်ပါသည်။</p>
-                    <div class="pricing">
-                        <span>၁ ပတ် - ၅၀၀ ကျပ်</span> | <span>၁ လ - ၂၀၀၀ ကျပ်</span>
-                    </div>
-                    <button class="btn-gold" onclick="openPaymentModal()">💎 Premium ရယူမည်</button>
+        <!-- Toggle Tabs / Buttons (အသုံးပြုသူ ကြည့်ချင်တာပဲ ရွေးကြည့်ရန်) -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-target="overview">အထွေထွေ</button>
+            <button class="tab-btn" data-target="tides">ဒီရေ/ရေမှတ်</button>
+            <button class="tab-btn" data-target="environment">လေထု/UV/လေတိုက်နှုန်း</button>
+            <button class="tab-btn" data-target="ai-insights">AI ခန့်မှန်းချက်</button>
+        </nav>
+
+        <!-- Tab Content 1: Overview -->
+        <main class="tab-content active" id="overview">
+            <div class="card-grid">
+                <div class="card">
+                    <h3>အပူချိန်</h3>
+                    <div class="card-value" id="tempValue">-- °C</div>
                 </div>
+                <div class="card">
+                    <h3>မိုးရေချိန်</h3>
+                    <div class="card-value" id="rainValue">-- mm</div>
+                </div>
+                <div class="card alert-card">
+                    <h3>ရေကြီးနိုင်ချေ သတိပေးချက်</h3>
+                    <div class="card-value alert-text" id="floodAlert">စစ်ဆေးနေသည်...</div>
+                </div>
+            </div>
+        </main>
 
-                <!-- ပရီမီယမ် ဝယ်ယူပြီးပါက ပြသမည့် Content -->
-                <div id="premiumUserView" style="display:none;">
-                    <p class="ai-text">
-                        <b>🤖 AI သုံးသပ်ချက်:</b> လာမည့် ၃ ရက်အတွင်း ဧရာဝတီတိုင်း မြစ်ဝကျွန်းပေါ်ဒေသများတွင် မိုးသည်းထန်စွာ ရွာသွန်းနိုင်ပြီး ပင်လယ်ပြင်တွင် လှိုင်းအမြင့် ၈ ပေထိ ရှိနိုင်သဖြင့် လှေလုပ်ငန်းများ သတိပြုရန် လိုအပ်ပါသည်။
+        <!-- Tab Content 2: Tides -->
+        <main class="tab-content" id="tides">
+            <div class="card-grid">
+                <div class="card">
+                    <h3>ဒီရေ အတက်ချိန် (အနီးဆုံး)</h3>
+                    <div class="card-value" id="highTideTime">--:--</div>
+                </div>
+                <div class="card">
+                    <h3>ဒီရေ အကျချိန် (အနီးဆုံး)</h3>
+                    <div class="card-value" id="lowTideTime">--:--</div>
+                </div>
+                <div class="card">
+                    <h3>ရေမျက်နှာပြင် ပြောင်းလဲမှု</h3>
+                    <div class="card-value" id="waterLevel">-- m</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab Content 3: Air & UV -->
+        <main class="tab-content" id="environment">
+            <div class="card-grid">
+                <div class="card">
+                    <h3>လေတိုက်နှုန်း</h3>
+                    <div class="card-value" id="windSpeed">-- km/h</div>
+                </div>
+                <div class="card">
+                    <h3>ခရမ်းလွန်ရောင်ခြည် (UV)</h3>
+                    <div class="card-value" id="uvIndex">--</div>
+                </div>
+                <div class="card">
+                    <h3>လေထုအရည်အသွေး (AQI)</h3>
+                    <div class="card-value" id="aqiValue">--</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab Content 4: AI Insights -->
+        <main class="tab-content" id="ai-insights">
+            <div class="ai-box">
+                <h3 class="ai-title">AI အသေးစိတ် သုံးသပ်ခန့်မှန်းချက်</h3>
+                <div class="ai-content-wrapper">
+                    <p id="aiSummaryText" class="ai-gradient-text">
+                        ဒေတာများကို ပိုင်းခြားစိတ်ဖြာနေပါသည်...
                     </p>
+                    
+                    <!-- Locked Layer for Non-Premium Users -->
+                    <div class="premium-lock-overlay" id="premiumOverlay">
+                        <p>🔒 အသေးစိတ် AI ခန့်မှန်းချက်ကို ကြည့်ရန် Premium ရယူပါ</p>
+                        <span class="price-tag">တစ်ပတ် ၅၀၀ ကျပ် / တစ်လ ၂၀၀၀ ကျပ်</span>
+                        <button class="btn-unlock" onclick="unlockPremiumMock()">စမ်းသပ်မှုအဖြစ် Unlock လုပ်မည်</button>
+                    </div>
                 </div>
             </div>
-
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
