@@ -10,12 +10,16 @@
 
     <div class="app-container">
         <!-- Header Section -->
+                <!-- Header Section -->
         <header class="header">
             <div class="logo-area">
                 <h1>ဧရာဝတီ Weather & River Alerts</h1>
-                <span class="badge-status" id="locationStatus">GPS ရှာဖွေနေသည်...</span>
+                <span class="badge-status" id="locationStatus">စောင့်ဆိုင်းနေသည်...</span>
             </div>
-            <button class="btn-premium" id="premiumBtn">⭐ Premium သို့မြှင့်ရန်</button>
+            <div class="header-btns" style="display: flex; gap: 6px;">
+                <button class="btn-reset" onclick="resetLocation()" title="တည်နေရာအသစ်ရှာရန်" style="background: #0d9488; border: none; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">📍 ပြောင်းရန်</button>
+                <button class="btn-premium" id="premiumBtn">⭐ Premium</button>
+            </div>
         </header>
 
         <!-- Dynamic Location Info -->
