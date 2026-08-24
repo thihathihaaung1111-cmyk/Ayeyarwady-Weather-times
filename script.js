@@ -153,3 +153,21 @@ locationBtn.addEventListener("click", () => {
         document.getElementById("location").innerHTML = "❌ Location Permission ပေးပါ";
     }, { timeout: 10000 });
 });
+// အချက်အလက်များ ဖွင့်/ပိတ် လုပ်သည့် Function
+function toggleWeatherDetails() {
+    var section = document.getElementById("detailsSection");
+    var btn = document.getElementById("toggleDataBtn");
+
+    if (section.style.display === "none" || section.style.display === "") {
+        section.style.display = "block";
+        btn.innerText = "🔼 မိုးလေဝသ အချက်အလက်များ ဝှက်မည်";
+    } else {
+        section.style.display = "none";
+        btn.innerText = "📊 မိုးလေဝသ အသေးစိတ် ကြည့်မည်";
+    }
+}
+
+// Payment Modal ဖွင့်ရန် (နမူနာ)
+function openPaymentModal() {
+    alert("KPay / KBZPay သို့မဟုတ် WavePay ဖြင့် တစ်ပတ် ၅၀၀ ကျပ် (သို့) တစ်လ ၂၀၀၀ ကျပ် ငွေချေစနစ် ချိတ်ဆက်ရန် ဖြစ်ပါသည်။");
+}
