@@ -1,0 +1,34 @@
+name: Update Flood Data & Weather Forecast
+
+on:
+  schedule:
+    # တစ်ရက် ၃ ကြိမ် (မြန်မာစံတော်ချိန် မနက် ၆:၃၀၊ နေ့လယ် ၂:၃၀၊ ညနေ ၆:၃၀) အလိုအလျောက် Run မည်
+    - cron: '0 0,8,12 * * *'
+  workflow_dispatch: # Manual နှိပ်ပြီး ချက်ချင်း Run လို့လည်း ရအောင် ထည့်ထားသည်
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Fetch Latest DMH Data
+        run: |
+          python fetch_data.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add flood-data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update flood data [skip ci]" && git push)
