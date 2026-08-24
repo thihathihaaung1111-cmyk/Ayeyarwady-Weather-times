@@ -3,282 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ဧရာဝတီ ရေကြောင်းနှင့် မိုးလေဝသ သတင်းလွှာ</title>
+    <title>ဧရာဝတီ Weather & River Alerts</title>
     <style>
-        body {
-            background-color: #061a14;
-            color: #ffffff;
-            font-family: 'Pyidaungsu', sans-serif, Arial;
-            margin: 0;
-            padding: 0;
-        }
-        .app-container {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 16px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .logo-area h1 {
-            font-size: 1.1rem;
-            margin: 0;
-            color: #2dd4bf;
-        }
-        .badge-status {
-            font-size: 0.7rem;
-            background: #0d9488;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        .btn-premium {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .search-section {
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            margin-bottom: 10px;
-            border-radius: 8px;
-        }
-        .current-location-card {
-            background: rgba(13, 148, 136, 0.15);
-            border: 1px solid rgba(13, 148, 136, 0.4);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-        .current-location-card h2 {
-            font-size: 1.2rem;
-            margin: 0 0 4px 0;
-        }
-        .sub-text {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin: 0;
-        }
-        .tab-navigation {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 14px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-        }
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: none;
-            color: #cbd5e1;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .tab-btn.active {
-            background: #0d9488;
-            color: white;
-            font-weight: bold;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .card-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
-        .card h3 {
-            font-size: 0.9rem;
-            margin: 0 0 8px 0;
-            color: #2dd4bf;
-        }
-        .card .value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin: 0;
-        }
-        .alert-card {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-        .ai-card {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-        .ai-card p {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre-line;
-            margin: 0;
-        }
-        .premium-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(6, 26, 20, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .lock-box {
-            background: #0f2922;
-            border: 1px solid #f59e0b;
-            padding: 24px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 300px;
-        }
-        .lock-box h2 {
-            color: #f59e0b;
-            margin-top: 0;
-        }
-        .btn-unlock {
-            background: #f59e0b;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        footer {
-            text-align: center;
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 20px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pyidaungsu', 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #0b1512; color: #e2e8f0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 480px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        h2 { font-size: 1.1rem; color: #2dd4bf; }
+        .header-btns { display: flex; gap: 6px; align-items: center; }
+        .badge { font-size: 0.7rem; background: #0d9488; padding: 4px 8px; border-radius: 12px; color: #fff; }
+        button { border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .btn-gps { background: #1e293b; color: #2dd4bf; border: 1px solid #0d9488; }
+        .btn-premium { background: #f59e0b; color: #000; }
+
+        .search-box { position: relative; margin-bottom: 15px; }
+        .search-box input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #1e293b; background: #11221c; color: #fff; font-size: 0.9rem; }
+        .search-results { position: absolute; width: 100%; background: #1e293b; border-radius: 8px; margin-top: 5px; max-height: 200px; overflow-y: auto; z-index: 10; list-style: none; display: none; }
+
+        .location-card { background: rgba(45, 212, 191, 0.05); border: 1px solid rgba(45, 212, 191, 0.2); border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; }
+        .location-card h1 { font-size: 1.5rem; color: #fff; margin-bottom: 4px; }
+        .location-card p { font-size: 0.75rem; color: #94a3b8; }
+
+        .alert-box { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; color: #34d399; }
+
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #11221c; padding: 4px; border-radius: 8px; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 8px 4px; background: transparent; color: #94a3b8; border-radius: 6px; font-size: 0.78rem; white-space: nowrap; }
+        .tab-btn.active { background: #0d9488; color: #fff; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: #11221c; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; }
+        .card h3 { font-size: 0.85rem; color: #2dd4bf; margin-bottom: 6px; }
+        .val { font-size: 1.3rem; font-weight: bold; color: #fff; }
+
+        footer { text-align: center; margin-top: 25px; font-size: 0.7rem; color: #64748b; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .modal { background: #11221c; border: 1px solid #f59e0b; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
+        .modal h2 { color: #f59e0b; margin-bottom: 10px; }
+        .modal p { font-size: 0.85rem; margin-bottom: 15px; color: #cbd5e1; }
+        .btn-unlock { background: #f59e0b; color: #000; width: 100%; padding: 10px; margin-bottom: 8px; }
+        .btn-close { background: #334155; color: #fff; width: 100%; padding: 8px; }
     </style>
 </head>
 <body>
-
-    <div class="app-container">
-        <!-- Header Section -->
-        <header class="header">
-            <div class="logo-area">
-                <h1>ဧရာဝတီ Weather & River Alerts</h1>
-                <span class="badge-status" id="locationStatus">စောင့်ဆိုင်းနေသည်...</span>
-            </div>
-            <div class="header-btns" style="display: flex; gap: 6px;">
-                <button class="btn-reset" onclick="resetLocation()" title="GPS ဖြင့် ပြန်ရှာရန်" style="background: #0d9488; border: none; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">📍 GPS</button>
-                <button class="btn-premium" id="premiumBtn">⭐ Premium</button>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h2>ဧရာဝတီ Weather & River Alerts</h2>
+            <div class="header-btns">
+                <span id="locationStatus" class="badge">GPS ရှာနေသည်...</span>
+                <button class="btn-gps" onclick="resetLocation()">📍 GPS</button>
+                <button class="btn-premium" onclick="togglePremiumModal()">⭐ Premium</button>
             </div>
         </header>
 
-        <!-- Search Bar Section -->
-        <section class="search-section">
-            <div style="display: flex; gap: 8px; position: relative;">
-                <input type="text" id="locationSearchInput" placeholder="🔍 မြို့နယ် သို့မဟုတ် ရွာနာမည် ရိုက်ထည့်ပါ..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 0.9rem;" oninput="filterLocations(this.value)">
-            </div>
-            <ul id="searchResultsList" style="list-style: none; padding: 0; margin: 5px 0 0 0; max-height: 150px; overflow-y: auto; background: #1e293b; border-radius: 6px; display: none; position: absolute; width: 91%; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></ul>
-        </section>
+        <!-- Search Box -->
+        <div class="search-box">
+            <input type="text" id="locationSearchInput" placeholder="🔍 မြို့နယ် သို့မဟုတ် ရွာနာမည် ရိုက်ထည့်ပါ..." oninput="filterLocations(this.value)">
+            <ul id="searchResultsList" class="search-results"></ul>
+        </div>
 
-        <!-- Dynamic Location Info -->
-        <section class="current-location-card">
-            <h2 id="currentLocationName">အနီးဆုံးနေရာကို ရှာဖွေနေပါသည်...</h2>
-            <p id="geoCoordinates" class="sub-text">Lat: -- | Long: --</p>
-        </section>
+        <!-- Location Card -->
+        <div class="location-card">
+            <h1 id="currentLocationName">ဟိုင်းကြီးကျွန်း (ပုသိမ်)</h1>
+            <p id="geoCoordinates">Lat: -- | Long: --</p>
+        </div>
 
-        <!-- Toggle Tabs / Buttons -->
-        <nav class="tab-navigation">
-            <button class="tab-btn active" data-target="overview">အကျဉ်းချုပ်</button>
-            <button class="tab-btn" data-target="tides">ဒီရေ/ရေမှတ်</button>
-            <button class="tab-btn" data-target="environment">လေတိုက်/UV/လေထု</button>
-            <button class="tab-btn" data-target="ai-insights">AI ခန့်မှန်းချက်</button>
-        </nav>
+        <!-- DMH Alert -->
+        <div id="floodAlert" class="alert-box">✅ မိုးလေဝသ အချက်အလက်များ တင်ယူနေပါသည်...</div>
 
-        <!-- Tab Content 1: Overview -->
-        <main class="tab-content active" id="overview">
-            <div class="card-grid">
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" data-target="tab-summary">အကျဉ်းချုပ်</button>
+            <button class="tab-btn" data-target="tab-tides">ဒီရေ/ရေမှတ်</button>
+            <button class="tab-btn" data-target="tab-wind">လေတိုက်/UV/လေထု</button>
+            <button class="tab-btn" data-target="tab-ai">AI ခန်းမှန်းချက်</button>
+        </div>
+
+        <!-- Tab 1: Summary -->
+        <div id="tab-summary" class="tab-content active">
+            <div class="grid-2">
                 <div class="card">
-                    <h3>🌡️ လက်ရှိ အပူချိန်</h3>
-                    <p class="value" id="tempValue">-- °C</p>
+                    <h3>🌡️ အပူချိန်</h3>
+                    <p id="tempValue" class="val">-- °C</p>
                 </div>
                 <div class="card">
-                    <h3>🌧️ မိုးရေချိန် (ယနေ့)</h3>
-                    <p class="value" id="rainValue">-- mm</p>
+                    <h3>🌧️ မိုးရေချိန်</h3>
+                    <p id="rainValue" class="val">-- mm</p>
                 </div>
             </div>
-            <div class="card alert-card">
-                <h3>⚠️ ရေကြီး/ရေလျှံ သတိပေးချက်</h3>
-                <p id="floodAlert" class="alert-text">အချက်အလက် စစ်ဆေးနေသည်...</p>
+            <!-- Premium Forecast Container -->
+            <div class="card" style="margin-top: 15px;">
+                <h3>📅 ရှေ့ (၃) ရက်စာ မိုး/ဒီရေ/မုန်တိုင်း ခန့်မှန်းချက်</h3>
+                <div id="premiumForecastContainer"></div>
             </div>
-        </main>
+        </div>
 
-        <!-- Tab Content 2: Tides -->
-        <main class="tab-content" id="tides">
+        <!-- Tab 2: Tides -->
+        <div id="tab-tides" class="tab-content">
             <div class="card">
-                <h3>🌊 ဒီရေတက်ချိန် / ကျချိန်</h3>
-                <p><strong>အမြင့်ဆုံးဒီရေ:</strong> <span id="highTideTime">--</span></p>
-                <p><strong>အနိမ့်ဆုံးဒီရေ:</strong> <span id="lowTideTime">--</span></p>
+                <h3>🌊 ဒီရေ တက်ချိန်</h3>
+                <p id="highTideTime" class="val">--</p>
             </div>
-            <div class="card">
-                <h3>📈 မြစ်ရေအခြေအနေ</h3>
-                <p>လက်ရှိရေမှတ်: <span id="waterLevel">-- m</span></p>
+            <div class="card" style="margin-top: 10px;">
+                <h3>📉 ဒီရေ ကျချိန်</h3>
+                <p id="lowTideTime" class="val">--</p>
             </div>
-        </main>
+            <div class="card" style="margin-top: 10px;">
+                <h3>📏 မြစ်ရေမှတ်</h3>
+                <p id="waterLevel" class="val">--</p>
+            </div>
+        </div>
 
-        <!-- Tab Content 3: Environment -->
-        <main class="tab-content" id="environment">
-            <div class="card-grid">
+        <!-- Tab 3: Wind & UV -->
+        <div id="tab-wind" class="tab-content">
+            <div class="grid-2">
                 <div class="card">
                     <h3>💨 လေတိုက်နှုန်း</h3>
-                    <p class="value" id="windSpeed">-- km/h</p>
+                    <p id="windSpeed" class="val">-- km/h</p>
                 </div>
                 <div class="card">
                     <h3>☀️ UV Index</h3>
-                    <p class="value" id="uvIndex">--</p>
-                </div>
-                <div class="card">
-                    <h3>🌫️ လေထုအရည်အသွေး (AQI)</h3>
-                    <p class="value" id="aqiValue">--</p>
+                    <p id="uvIndex" class="val">--</p>
                 </div>
             </div>
-        </main>
-
-        <!-- Tab Content 4: AI Insights -->
-        <main class="tab-content" id="ai-insights">
-            <div class="card ai-card">
-                <h3>🤖 AI ရေကြောင်း & မိုးလေဝသ သုံးသပ်ချက်</h3>
-                <p id="aiSummaryText">အချက်အလက်များကို တွက်ချက်နေပါသည်...</p>
+            <div class="card" style="margin-top: 10px;">
+                <h3>🌫️ လေထုအရည်အသွေး (AQI)</h3>
+                <p id="aqiValue" class="val">--</p>
             </div>
-        </main>
+        </div>
 
-        <!-- Premium Lock Overlay -->
-        <div class="premium-overlay" id="premiumOverlay" style="display: none;">
-            <div class="lock-box">
-                <h2>🔒 Premium အင်္ဂါရပ်</h2>
-                <p>ဤအချက်အလက်ကို ကြည့်ရှုရန် Premium သို့ မြှင့်တင်ပါ။</p>
-                <button class="btn-unlock" onclick="unlockPremiumMock()">စမ်းသပ်ရန် ဖွင့်မည်</button>
+        <!-- Tab 4: AI Agriculture Forecast -->
+        <div id="tab-ai" class="tab-content">
+            <div class="card">
+                <div id="aiSummaryText" style="white-space: pre-line; line-height: 1.6; font-size: 0.88rem;">
+                    🤖 AI မှ စိုက်ပျိုးရေးနှင့် မိုးလေဝသ အကြံပြုချက်များကို တွက်ချက်နေပါသည်...
+                </div>
             </div>
         </div>
 
         <footer>
             <p>© 2026 Ayeyarwady Weather & River Alerts</p>
         </footer>
+    </div>
+
+    <!-- Premium Modal -->
+    <div id="premiumOverlay" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>⭐ Premium ဖွင့်ရန်</h2>
+            <p>ရှေ့ (၃) ရက်စာ မိုးရွာနိုင်ခြေ (%)၊ မုန်တိုင်းသတင်းနှင့် စိုက်ပျိုးရေး AI အကြံပြုချက်များကို အကန့်အသတ်မရှိ ကြည့်နိုင်ပါပြီ။</p>
+            <button onclick="unlockPremiumMock()" class="btn-unlock">👑 စမ်းသပ်ကြည့်မည် (Free Unlock)</button>
+            <button onclick="togglePremiumModal()" class="btn-close">ပိတ်မည်</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
