@@ -1,182 +1,470 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ဧရာဝတီ Weather & River Alerts</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pyidaungsu', 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: #0b1512; color: #e2e8f0; padding: 12px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 480px; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        h2 { font-size: 1.05rem; color: #2dd4bf; }
-        .header-btns { display: flex; gap: 6px; align-items: center; }
-        .badge { font-size: 0.7rem; background: #0d9488; padding: 4px 8px; border-radius: 12px; color: #fff; }
-        button { border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-        .btn-gps { background: #1e293b; color: #2dd4bf; border: 1px solid #0d9488; }
-        .btn-premium { background: #f59e0b; color: #000; }
 
-        .search-box { position: relative; margin-bottom: 12px; }
-        .search-box input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #1e293b; background: #11221c; color: #fff; font-size: 0.9rem; }
-        .search-results { position: absolute; width: 100%; background: #1e293b; border-radius: 8px; margin-top: 5px; max-height: 200px; overflow-y: auto; z-index: 99; list-style: none; display: none; border: 1px solid #0d9488; }
-        .search-results li { padding: 10px; border-bottom: 1px solid #334155; cursor: pointer; font-size: 0.85rem; }
-        .search-results li:hover { background: #0d9488; color: #fff; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .location-card { background: rgba(45, 212, 191, 0.05); border: 1px solid rgba(45, 212, 191, 0.2); border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 12px; }
-        .location-card h1 { font-size: 1.4rem; color: #fff; margin-bottom: 4px; }
-        .location-card p { font-size: 0.75rem; color: #94a3b8; }
+<title>Ayeyarwady Weather Times</title>
 
-        .alert-box { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 10px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 12px; color: #34d399; }
+<meta name="theme-color" content="#2e7d32">
 
-        .tabs { display: flex; gap: 4px; margin-bottom: 12px; background: #11221c; padding: 4px; border-radius: 8px; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 8px 4px; background: transparent; color: #94a3b8; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; }
-        .tab-btn.active { background: #0d9488; color: #fff; }
+<meta name="description"
+content="Ayeyarwady Weather Times - Weather, Flood, Tide, Cyclone and AI Forecast">
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+<link rel="stylesheet" href="style.css">
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .card { background: #11221c; border: 1px solid #1e293b; border-radius: 10px; padding: 10px; }
-        .card h3 { font-size: 0.8rem; color: #2dd4bf; margin-bottom: 4px; }
-        .val { font-size: 1.15rem; font-weight: bold; color: #fff; }
-        .sub-val { font-size: 0.75rem; color: #fbbf24; margin-top: 2px; }
+<link rel="preconnect" href="https://fonts.googleapis.com">
 
-        .ai-selector { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
-        .ai-btn { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; cursor: pointer; }
-        .ai-btn.active { background: #f59e0b; color: #000; font-weight: bold; }
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        footer { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #64748b; }
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .modal { background: #11221c; border: 1px solid #f59e0b; padding: 18px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
-        .modal h2 { color: #f59e0b; margin-bottom: 8px; font-size: 1.2rem; }
-        .modal p { font-size: 0.82rem; margin-bottom: 12px; color: #cbd5e1; line-height: 1.4; }
-        .btn-unlock { background: #f59e0b; color: #000; width: 100%; padding: 10px; margin-bottom: 8px; border: none; border-radius: 6px; font-weight: bold; }
-        .btn-close { background: #334155; color: #fff; width: 100%; padding: 8px; border: none; border-radius: 6px; }
-    </style>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
 </head>
+
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h2>ဧရာဝတီ Weather & River Alerts</h2>
-            <div class="header-btns">
-                <span id="locationStatus" class="badge">GPS စစ်နေသည်...</span>
-                <button class="btn-gps" onclick="resetLocation()">📍 GPS</button>
-                <button class="btn-premium" onclick="togglePremiumModal()">⭐ Premium</button>
-            </div>
-        </header>
 
-        <!-- Search Box -->
-        <!-- Search Box HTML structure -->
-<input type="text" id="searchInput" oninput="searchLocation()" placeholder="မြို့နယ် သို့မဟုတ် ရွာအမည် ရိုက်ထည့်ပါ...">
+<!-- Splash Screen -->
 
-        <!-- Location Card -->
-        <div class="location-card">
-            <h1 id="currentLocationName">ဟိုင်းကြီးကျွန်း (ပုသိမ်)</h1>
-            <p id="geoCoordinates">Lat: -- | Long: --</p>
-        </div>
+<div id="splash">
 
-        <!-- DMH Alert -->
-        <div id="floodAlert" class="alert-box">✅ မိုးလေဝသ အချက်အလက်များ တင်ယူနေပါသည်...</div>
+<h1>
 
-        <!-- Tab Navigation -->
-        <div class="tabs">
-            <button class="tab-btn active" data-target="tab-summary">အကျဉ်းချုပ်</button>
-            <button class="tab-btn" data-target="tab-tides">ဒီရေ/မြစ်ရေ</button>
-            <button class="tab-btn" data-target="tab-wind">လေထု/AQI/လှိုင်း</button>
-            <button class="tab-btn" data-target="tab-ai">🤖 AI အဆင့်မြင့် ခန့်မှန်းချက်</button>
-        </div>
+🌿 Ayeyarwady Weather Times
 
-        <!-- Tab 1: Summary -->
-        <div id="tab-summary" class="tab-content active">
-            <div class="grid-2">
-                <div class="card">
-                    <h3>🌡️ အပူချိန်</h3>
-                    <p id="tempValue" class="val">-- °C</p>
-                    <p id="weatherCondition" class="sub-val">--</p>
-                </div>
-                <div class="card">
-                    <h3>🌧️ မိုးရေချိန် & အခြေအနေ</h3>
-                    <p id="rainValue" class="val">-- mm</p>
-                    <p id="rainStatusText" class="sub-val">--</p>
-                </div>
-            </div>
-            <div class="card" style="margin-top: 10px;">
-                <h3>📅 ရှေ့ (၃) ရက်စာ မိုး/ဒီရေ/မုန်တိုင်း ခန့်မှန်းချက်</h3>
-                <div id="premiumForecastContainer"></div>
-            </div>
-        </div>
+</h1>
 
-        <!-- Tab 2: Tides -->
-        <div id="tab-tides" class="tab-content">
-            <div class="card">
-                <h3>🌊 ဒီရေ တက်ချိန်</h3>
-                <p id="highTideTime" class="val">--</p>
-            </div>
-            <div class="card" style="margin-top: 8px;">
-                <h3>📉 ဒီရေ ကျချိန်</h3>
-                <p id="lowTideTime" class="val">--</p>
-            </div>
-            <div class="card" style="margin-top: 8px;">
-                <h3>📏 မြစ်ရေမှတ် (အနီးစပ်ဆုံး မြစ်ဆုံ)</h3>
-                <p id="waterLevel" class="val">--</p>
-            </div>
-        </div>
+<p>
 
-        <!-- Tab 3: Wind & AQI -->
-        <div id="tab-wind" class="tab-content">
-            <div class="grid-2">
-                <div class="card">
-                    <h3>💨 လေတိုက်နှုန်း</h3>
-                    <p id="windSpeed" class="val">-- km/h</p>
-                </div>
-                <div class="card">
-                    <h3>🌊 လှိုင်းအမြင့် (Marine/River)</h3>
-                    <p id="waveHeightVal" class="val">-- m</p>
-                    <p id="waveStatus" class="sub-val">--</p>
-                </div>
-            </div>
-            <div class="card" style="margin-top: 8px;">
-                <h3>🌫️ လေထုအရည်အသွေး (AQI အသေးစိတ်)</h3>
-                <p id="aqiValue" class="val">--</p>
-                <p id="aqiStatusText" class="sub-val">--</p>
-            </div>
-        </div>
+Weather • Flood • Tide • AI
 
-        <!-- Tab 4: Advanced AI -->
-        <div id="tab-ai" class="tab-content">
-            <!-- Role Selectors -->
-            <div class="ai-selector">
-    <button class="ai-btn active" onclick="switchAIRole('harvest', event)">🚜 ကောက်ရိတ်/စပါးလှန်း</button>
-    <button class="ai-btn" onclick="switchAIRole('fishery', event)">🐟 ရေလုပ်သား/ပင်လယ်</button>
-    <button class="ai-btn" onclick="switchAIRole('river', event)">🚤 ရေကြောင်း/ဒီရေ</button>
-    <button class="ai-btn" onclick="switchAIRole('flood', event)">🌊 တာကျိုး/ရေကြီးသတိပေးချက်</button>
+</p>
+
 </div>
 
-            <div class="card">
-                <div id="aiSummaryText" style="white-space: pre-line; line-height: 1.6; font-size: 0.85rem;">
-                    🤖 AI မှ အချက်အလက်များကို တွက်ချက်နေပါသည်...
-                </div>
-            </div>
-        </div>
+<!-- Header -->
 
-        <footer>
-            <p>© 2026 Ayeyarwady Weather & River Alerts</p>
-        </footer>
-    </div>
+<header>
 
-    <!-- Modal -->
-    <div id="premiumOverlay" class="modal-overlay" style="display: none;">
-        <div class="modal">
-            <h2>⭐ AI Pro & Premium ဖွင့်ရန်</h2>
-            <p>လယ်သမား၊ ရေလုပ်သား၊ စပါးလှန်းသူများနှင့် ရေကြောင်း သီးသန့် အသေးစိတ် AI ခန့်မှန်းချက်များနှင့် ရှေ့ (၃) ရက်စာ မိုးရွာနိုင်ခြေ (%) အချက်အလက်များကို ရယူပါ၊၊</p>
-            <button onclick="unlockPremiumMock()" class="btn-unlock">👑 Premium စမ်းသုံးမည် (Free Click)</button>
-            <button onclick="togglePremiumModal()" class="btn-close">ပိတ်မည်</button>
-        </div>
-    </div>
+<div class="logo">
 
-    <script src="script.js"></script>
+🌿 Ayeyarwady Weather Times
+
+</div>
+
+<div class="header-icons">
+
+<button id="gpsBtn">
+
+<i class="fa-solid fa-location-crosshairs"></i>
+
+</button>
+
+<button id="settingBtn">
+
+<i class="fa-solid fa-gear"></i>
+
+</button>
+
+</div>
+
+</header>
+
+<!-- Search -->
+
+<section class="search-area">
+
+<input
+
+type="text"
+
+id="searchInput"
+
+placeholder="မြို့နာမည် ရှာပါ..."
+
+>
+
+<button id="searchBtn">
+
+<i class="fa-solid fa-magnifying-glass"></i>
+
+</button>
+
+</section>
+
+<!-- Favourite -->
+
+<section class="favorite">
+
+⭐ သတ်မှတ်ထားသော တည်နေရာ
+
+<div id="favoriteLocation">
+
+မရှိသေးပါ
+
+</div>
+
+</section>
+
+<!-- Current Location -->
+
+<section class="card">
+
+<h2>
+
+📍 လက်ရှိတည်နေရာ
+
+</h2>
+
+<div class="info">
+
+<div>
+
+မြို့
+
+</div>
+
+<div id="cityName">
+
+Loading...
+
+</div>
+
+</div>
+
+<div class="info">
+
+<div>
+
+Latitude
+
+</div>
+
+<div id="lat">
+
+--
+
+</div>
+
+</div>
+
+<div class="info">
+
+<div>
+
+Longitude
+
+</div>
+
+<div id="lon">
+
+--
+
+</div>
+
+</div>
+
+<div class="info">
+
+<div>
+
+Distance
+
+</div>
+
+<div id="distance">
+
+--
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Weather -->
+
+<section class="card">
+
+<h2>
+
+🌤 Live Weather
+
+</h2>
+
+<div class="grid">
+
+<div class="box">
+
+<div class="title">
+
+Temperature
+
+</div>
+
+<div id="temp">
+
+--
+
+</div>
+
+</div>
+
+<div class="box">
+
+<div class="title">
+
+Humidity
+
+</div>
+
+<div id="humidity">
+
+--
+
+</div>
+
+</div>
+
+<div class="box">
+
+<div class="title">
+
+Wind
+
+</div>
+
+<div id="wind">
+
+--
+
+</div>
+
+</div>
+
+<div class="box">
+
+<div class="title">
+
+Rain
+
+</div>
+
+<div id="rain">
+
+--
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Flood -->
+
+<section class="card">
+
+<h2>
+
+🌊 Flood Warning
+
+</h2>
+
+<div id="floodStatus">
+
+No Data
+
+</div>
+
+<div id="riskBar">
+
+<div id="riskFill">
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Tide -->
+
+<section class="card">
+
+<h2>
+
+🌊 Tide
+
+</h2>
+
+<div class="info">
+
+<div>
+
+High Tide
+
+</div>
+
+<div id="highTide">
+
+--
+
+</div>
+
+</div>
+
+<div class="info">
+
+<div>
+
+Low Tide
+
+</div>
+
+<div id="lowTide">
+
+--
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Cyclone -->
+
+<section class="card">
+
+<h2>
+
+🌀 Cyclone
+
+</h2>
+
+<div id="cycloneInfo">
+
+No Active Cyclone
+
+</div>
+
+</section>
+
+<!-- AI -->
+
+<section class="card">
+
+<h2>
+
+🤖 AI Weather Analysis
+
+</h2>
+
+<div id="aiResult">
+
+AI Analysis Loading...
+
+</div>
+
+</section>
+
+<!-- Farmer -->
+
+<section class="card">
+
+<h2>
+
+🌾 စပါးသမား အကြံပြုချက်
+
+</h2>
+
+<div id="farmerAdvice">
+
+Loading...
+
+</div>
+
+</section>
+
+<!-- Fisher -->
+
+<section class="card">
+
+<h2>
+
+🛶 ငါးဖမ်းသမား အကြံပြုချက်
+
+</h2>
+
+<div id="fishAdvice">
+
+Loading...
+
+</div>
+
+</section>
+
+<!-- Emergency -->
+
+<section class="card">
+
+<h2>
+
+🚨 Emergency
+
+</h2>
+
+<button id="callBtn">
+
+Emergency Contact
+
+</button>
+
+<button id="hospitalBtn">
+
+Nearby Hospital
+
+</button>
+
+</section>
+
+<footer>
+
+<div>
+
+©2026
+
+Ayeyarwady Weather Times
+
+</div>
+
+<div>
+
+Powered by
+
+DMH
+
+|
+
+Open-Meteo
+
+|
+
+GitHub
+
+</div>
+
+</footer>
+
+<script src="data.js"></script>
+
+<script src="ai.js"></script>
+
+<script src="script.js"></script>
+
 </body>
+
 </html>
