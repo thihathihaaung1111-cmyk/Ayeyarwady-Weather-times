@@ -69,10 +69,8 @@
         </header>
 
         <!-- Search Box -->
-        <div class="search-box">
-            <input type="text" id="locationSearchInput" placeholder="🔍 မြို့နယ် သို့မဟုတ် ရွာနာမည် ရိုက်ထည့်ပါ..." oninput="filterLocations(this.value)">
-            <ul id="searchResultsList" class="search-results"></ul>
-        </div>
+        <!-- Search Box HTML structure -->
+<input type="text" id="searchInput" oninput="searchLocation()" placeholder="မြို့နယ် သို့မဟုတ် ရွာအမည် ရိုက်ထည့်ပါ...">
 
         <!-- Location Card -->
         <div class="location-card">
