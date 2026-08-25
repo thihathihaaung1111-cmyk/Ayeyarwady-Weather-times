@@ -1,1 +1,524 @@
+/* ===========================================
+   Ayeyarwady Weather Times
+   Version : V1
+   Theme : Green & Yellow
+=========================================== */
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+:root{
+
+--primary:#2e7d32;
+--secondary:#66bb6a;
+--accent:#ffd54f;
+--danger:#d32f2f;
+--warning:#ff9800;
+--bg:#eef7ee;
+--card:#ffffff;
+--text:#222;
+--shadow:0 8px 25px rgba(0,0,0,.12);
+--radius:18px;
+
+}
+
+body{
+
+font-family:"Noto Sans Myanmar",sans-serif;
+background:var(--bg);
+color:var(--text);
+line-height:1.6;
+
+}
+
+/* Splash */
+
+#splash{
+
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+
+background:linear-gradient(135deg,#2e7d32,#81c784);
+
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+
+color:white;
+z-index:9999;
+
+}
+
+#splash h1{
+
+font-size:34px;
+margin-bottom:15px;
+
+}
+
+#splash p{
+
+font-size:18px;
+
+}
+
+/* Header */
+
+header{
+
+position:sticky;
+top:0;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:15px;
+
+background:linear-gradient(90deg,#2e7d32,#43a047);
+
+color:white;
+
+box-shadow:var(--shadow);
+
+z-index:100;
+
+}
+
+.logo{
+
+font-size:20px;
+font-weight:bold;
+
+}
+
+.header-icons{
+
+display:flex;
+gap:10px;
+
+}
+
+.header-icons button{
+
+width:45px;
+height:45px;
+
+border:none;
+border-radius:50%;
+
+background:white;
+
+color:var(--primary);
+
+font-size:18px;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.header-icons button:hover{
+
+transform:scale(1.08);
+
+}
+
+/* Search */
+
+.search-area{
+
+display:flex;
+gap:10px;
+
+padding:18px;
+
+}
+
+.search-area input{
+
+flex:1;
+
+padding:15px;
+
+border-radius:14px;
+
+border:none;
+
+box-shadow:var(--shadow);
+
+font-size:16px;
+
+}
+
+.search-area button{
+
+width:60px;
+
+border:none;
+
+border-radius:14px;
+
+background:var(--accent);
+
+font-size:20px;
+
+cursor:pointer;
+
+}
+
+/* Card */
+
+.card{
+
+margin:18px;
+
+padding:18px;
+
+background:white;
+
+border-radius:var(--radius);
+
+box-shadow:var(--shadow);
+
+}
+
+.card h2{
+
+margin-bottom:15px;
+
+color:var(--primary);
+
+}
+
+/* Info */
+
+.info{
+
+display:flex;
+
+justify-content:space-between;
+
+padding:10px 0;
+
+border-bottom:1px solid #eee;
+
+}
+
+.info:last-child{
+
+border:none;
+
+}
+
+/* ===============================
+   Weather Grid
+=================================*/
+
+.grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+
+gap:15px;
+
+margin-top:15px;
+
+}
+
+.box{
+
+background:linear-gradient(135deg,#f8fff8,#e8f5e9);
+
+padding:18px;
+
+border-radius:16px;
+
+text-align:center;
+
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+transition:.3s;
+
+cursor:pointer;
+
+}
+
+.box:hover{
+
+transform:translateY(-6px);
+
+box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+}
+
+.box .title{
+
+font-size:15px;
+
+color:#666;
+
+margin-bottom:10px;
+
+}
+
+.box div:last-child{
+
+font-size:28px;
+
+font-weight:bold;
+
+color:#2e7d32;
+
+}
+
+/* ===============================
+   Favorite
+=================================*/
+
+.favorite{
+
+margin:18px;
+
+padding:16px;
+
+background:#fff8e1;
+
+border-left:6px solid #ffd54f;
+
+border-radius:15px;
+
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+font-size:16px;
+
+}
+
+#favoriteLocation{
+
+margin-top:10px;
+
+font-weight:bold;
+
+color:#2e7d32;
+
+}
+
+/* ===============================
+   Flood Risk Bar
+=================================*/
+
+#riskBar{
+
+width:100%;
+
+height:18px;
+
+background:#eeeeee;
+
+border-radius:50px;
+
+margin-top:15px;
+
+overflow:hidden;
+
+}
+
+#riskFill{
+
+width:0%;
+
+height:100%;
+
+background:linear-gradient(90deg,#4caf50,#ffc107,#f44336);
+
+transition:1s;
+
+}
+
+/* ===============================
+   AI Analysis
+=================================*/
+
+#aiResult{
+
+background:#f1f8e9;
+
+padding:18px;
+
+border-radius:15px;
+
+line-height:1.9;
+
+font-size:15px;
+
+border-left:5px solid #4caf50;
+
+}
+
+/* ===============================
+   Farmer
+=================================*/
+
+#farmerAdvice{
+
+background:#f9fff5;
+
+padding:15px;
+
+border-radius:12px;
+
+line-height:1.8;
+
+}
+
+/* ===============================
+   Fisherman
+=================================*/
+
+#fishAdvice{
+
+background:#eef9ff;
+
+padding:15px;
+
+border-radius:12px;
+
+line-height:1.8;
+
+}
+
+/* ===============================
+   Emergency Buttons
+=================================*/
+
+#callBtn,
+
+#hospitalBtn{
+
+width:100%;
+
+padding:15px;
+
+margin-top:12px;
+
+border:none;
+
+border-radius:12px;
+
+font-size:17px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+#callBtn{
+
+background:#e53935;
+
+color:white;
+
+}
+
+#hospitalBtn{
+
+background:#2e7d32;
+
+color:white;
+
+}
+
+#callBtn:hover,
+
+#hospitalBtn:hover{
+
+transform:scale(1.03);
+
+}
+
+/* ===============================
+   Footer
+=================================*/
+
+footer{
+
+margin-top:40px;
+
+padding:25px;
+
+background:#2e7d32;
+
+color:white;
+
+text-align:center;
+
+line-height:2;
+
+}
+
+/* ===============================
+   Smooth Animation
+=================================*/
+
+.card{
+
+animation:fadeUp .7s ease;
+
+}
+
+@keyframes fadeUp{
+
+from{
+
+opacity:0;
+
+transform:translateY(30px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+
+/* ===============================
+   Scrollbar
+=================================*/
+
+::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#43a047;
+
+border-radius:20px;
+
+}
+
+::-webkit-scrollbar-track{
+
+background:#f1f1f1;
+
+  }
