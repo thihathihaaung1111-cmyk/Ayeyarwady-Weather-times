@@ -1,480 +1,91 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Ayeyarwady Weather Times</title>
-
-<meta name="theme-color" content="#2e7d32">
-
-<meta name="description"
-content="Ayeyarwady Weather Times - Weather, Flood, Tide, Cyclone and AI Forecast">
-
-<link rel="stylesheet" href="style.css">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayeyarwady Weather Times</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<!-- Splash Screen -->
-
-<div id="splash">
-
-<h1>
-
-🌿 Ayeyarwady Weather Times
-
-</h1>
-
-<p>
-
-Weather • Flood • Tide • AI
-
-</p>
-
-</div>
-
-<!-- Header -->
-
-<header>
-
-<div class="logo">
-
-🌿 Ayeyarwady Weather Times
-
-</div>
-
-<div class="header-icons">
-
-<button id="gpsBtn">
-
-<i class="fa-solid fa-location-crosshairs"></i>
-
-</button>
-
-<button id="settingBtn">
-
-<i class="fa-solid fa-gear"></i>
-
-</button>
-
-</div>
-
-</header>
-
-<!-- Search -->
-
-<section class="search-area">
-
-<input
-
-type="text"
-
-id="searchInput"
-
-placeholder="မြို့နာမည် ရှာပါ..."
-
->
-
-<button id="searchBtn">
-
-<i class="fa-solid fa-magnifying-glass"></i>
-
-</button>
-
-</section>
-
-<!-- Favourite -->
-
-<section class="favorite">
-
-⭐ သတ်မှတ်ထားသော တည်နေရာ
-
-<div id="favoriteLocation">
-
-မရှိသေးပါ
-
-</div>
-
-</section>
-
-<!-- Current Location -->
-
-<section class="card">
-
-<h2>
-
-📍 လက်ရှိတည်နေရာ
-
-</h2>
-
-<div class="info">
-
-<div>
-
-မြို့
-
-</div>
-
-<div id="cityName">
-
-Loading...
-
-</div>
-
-</div>
-
-<div class="info">
-
-<div>
-
-Latitude
-
-</div>
-
-<div id="lat">
-
---
-
-</div>
-
-</div>
-
-<div class="info">
-
-<div>
-
-Longitude
-
-</div>
-
-<div id="lon">
-
---
-
-</div>
-
-</div>
-
-<div class="info">
-
-<div>
-
-  <div class="info-card">
-
-<h3>📍 တည်နေရာအမျိုးအစား</h3>
-
-<p id="regionType">
-Loading...
-</p>
-
-  </div>
-  
-Distance
-
-</div>
-
-<div id="distance">
-
---
-
-</div>
-
-</div>
-
-</section>
-
-<!-- Weather -->
-
-<section class="card">
-
-<h2>
-
-🌤 Live Weather
-
-</h2>
-
-<div class="grid">
-
-<div class="box">
-
-<div class="title">
-
-Temperature
-
-</div>
-
-<div id="temp">
-
---
-
-</div>
-
-</div>
-
-<div class="box">
-
-<div class="title">
-
-Humidity
-
-</div>
-
-<div id="humidity">
-
---
-
-</div>
-
-</div>
-
-<div class="box">
-
-<div class="title">
-
-Wind
-
-</div>
-
-<div id="wind">
-
---
-
-</div>
-
-</div>
-
-<div class="box">
-
-<div class="title">
-
-Rain
-
-</div>
-
-<div id="rain">
-
---
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<!-- Flood -->
-
-<section class="card">
-
-<h2>
-
-🌊 Flood Warning
-
-</h2>
-
-<div id="floodStatus">
-
-No Data
-
-</div>
-
-<div id="riskBar">
-
-<div id="riskFill">
-
-</div>
-
-</div>
-
-</section>
-
-<!-- Tide -->
-
-<section class="card">
-
-<h2>
-
-🌊 Tide
-
-</h2>
-
-<div class="info">
-
-<div>
-
-High Tide
-
-</div>
-
-<div id="highTide">
-
---
-
-</div>
-
-</div>
-
-<div class="info">
-
-<div>
-
-Low Tide
-
-</div>
-
-<div id="lowTide">
-
---
-
-</div>
-
-</div>
-
-</section>
-
-<!-- Cyclone -->
-
-<section class="card">
-
-<h2>
-
-🌀 Cyclone
-
-</h2>
-
-<div id="cycloneInfo">
-
-No Active Cyclone
-
-</div>
-
-</section>
-
-<!-- AI -->
-
-<section class="card">
-
-<h2>
-
-🤖 AI Weather Analysis
-
-</h2>
-
-<div id="aiResult">
-
-AI Analysis Loading...
-
-</div>
-
-</section>
-
-<!-- Farmer -->
-
-<section class="card">
-
-<h2>
-
-🌾 စပါးသမား အကြံပြုချက်
-
-</h2>
-
-<div id="farmerAdvice">
-
-Loading...
-
-</div>
-
-</section>
-
-<!-- Fisher -->
-
-<section class="card">
-
-<h2>
-
-🛶 ငါးဖမ်းသမား အကြံပြုချက်
-
-</h2>
-
-<div id="fishAdvice">
-
-Loading...
-
-</div>
-
-</section>
-
-<!-- Emergency -->
-
-<section class="card">
-
-<h2>
-
-🚨 Emergency
-
-</h2>
-
-<button id="callBtn">
-
-Emergency Contact
-
-</button>
-
-<button id="hospitalBtn">
-
-Nearby Hospital
-
-</button>
-
-</section>
-
-<footer>
-
-<div>
-
-©2026
-
-Ayeyarwady Weather Times
-
-</div>
-
-<div>
-
-Powered by
-
-DMH
-
-|
-
-Open-Meteo
-
-|
-
-GitHub
-
-</div>
-
-</footer>
-
-<script src="data.js"></script>
-
-<script src="ai.js"></script>
-
-<script src="script.js"></script>
-
+    <!-- Splash Screen -->
+    <div id="splash">
+        <div class="splash-content">
+            <h1>🌊 Ayeyarwady Weather Times</h1>
+            <p>ရာသီဥတုနှင့် ရေဘေးအန္တရာယ် စောင့်ကြည့်ရေး</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h2>🌊 Ayeyarwady Weather Times</h2>
+            <p class="sub-title">အေးရွာဝတီ တိုင်းဒေသကြီး ရာသီဥတုနှင့် AI သတိပေးစနစ်</p>
+        </header>
+
+        <!-- Alert Banner -->
+        <div id="alertBanner" class="alert" style="display: none;"></div>
+
+        <!-- Search Bar -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="မြို့နာမည် ရိုက်ရှာပါ...">
+            <button id="searchBtn">🔍 ရှာမည်</button>
+            <button id="gpsBtn">📍 GPS တည်နေရာ</button>
+        </div>
+
+        <!-- Location Info Card -->
+        <div class="card location-card">
+            <h3>📍 တည်နေရာ အချက်အလက်</h3>
+            <p><strong>မြို့နာမည်:</strong> <span id="cityName">Current Location</span></p>
+            <p><strong>ဒေသအမျိုးအစား:</strong> <span id="regionType">🌾 ကုန်းတွင်းဒေသ</span></p>
+            <p><strong>Latitude:</strong> <span id="lat">-</span> | <strong>Longitude:</strong> <span id="lon">-</span></p>
+            <p><strong>အကွာအဝေး:</strong> <span id="distance">0 km</span></p>
+            <p class="fav-text">⭐️ နောက်ဆုံးရှာထားသော မြို့: <span id="favoriteLocation">-</span></p>
+        </div>
+
+        <!-- Live Weather Card -->
+        <div class="card weather-card">
+            <h3>☀️ လက်ရှိ ရာသီဥတု</h3>
+            <div class="weather-grid">
+                <div class="weather-item">
+                    <span>🌡 အပူချိန်</span>
+                    <strong id="temp">- °C</strong>
+                </div>
+                <div class="weather-item">
+                    <span>💧 စိုထိုင်းဆ</span>
+                    <strong id="humidity">- %</strong>
+                </div>
+                <div class="weather-item">
+                    <span>💨 လေတိုက်နှုန်း</span>
+                    <strong id="wind">- km/h</strong>
+                </div>
+                <div class="weather-item">
+                    <span>🌧 မိုးရေချိန်</span>
+                    <strong id="rain">- mm</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flood Risk Level Card -->
+        <div class="card flood-card">
+            <h3>🌊 ရေဘေး အန္တရာယ်အဆင့်</h3>
+            <div class="progress-bar">
+                <div id="riskFill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <p class="risk-status" id="floodStatus">🟡 တိုင်းတာနေပါသည်...</p>
+        </div>
+
+        <!-- AI Analysis Report Card -->
+        <div class="card ai-card">
+            <div id="aiResult">
+                <h3>🤖 AI Weather Analysis</h3>
+                <p>အချက်အလက်များ တောင်းယူနေပါသည်...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data & Script Files -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 </body>
-
 </html>
