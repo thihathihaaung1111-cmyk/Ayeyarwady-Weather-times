@@ -138,6 +138,12 @@ function fetchGPSLocation() {
     }
 }
 
+function searchLocation() {
+    let input = document.getElementById('searchInput').value.toLowerCase();
+    // မြို့နယ်/ရွာ စာရင်းကို filter လုပ်ပေးသည့် logic 
+    console.log("Searching for:", input);
+}
+
 function fallbackToDefault(msg) {
     const statusText = document.getElementById('locationStatus');
     if (statusText) statusText.innerText = msg;
